@@ -670,18 +670,25 @@ function showAuthModal(type) {
     // Google auth button - check backend status first
     document.getElementById('google-signin')?.addEventListener('click', async () => {
       try {
-        const response = await fetch(`${API_BASE}/health`);
+        const response = await fetch(`${API_BASE}/health`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          mode: 'cors'
+        });
         const data = await response.json();
 
         if (data.oauth) {
           window.location.href = `${API_BASE}/auth/google`;
         } else {
-          alert('Google OAuth is not configured yet.\n\nTo set it up:\n1. Go to console.cloud.google.com\n2. Create OAuth credentials\n3. Add them to server/.env\n\nFor now, please use "Skip → Try with demo data"');
+          // OAuth not configured, redirect to import page
           closeModal();
+          router.navigate('/import');
         }
       } catch (e) {
-        alert('Backend server not running.\n\nPlease start it with:\ncd server && npm run dev\n\nOr use "Skip → Try with demo data"');
+        // Backend not available - still allow user to continue with file upload
+        console.log('Backend not available, redirecting to import page');
         closeModal();
+        router.navigate('/import');
       }
     });
 

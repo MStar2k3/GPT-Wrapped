@@ -1890,8 +1890,17 @@
 .download-actions {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: var(--space-3);
     margin-bottom: var(--space-6);
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.download-actions .btn {
+    width: 100%;
 }
 
 .download-progress {
@@ -1921,6 +1930,10 @@
 
 .share-actions {
     margin-bottom: var(--space-8);
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .share-buttons {
@@ -1933,6 +1946,7 @@
 .share-buttons .btn {
     flex: 1;
     min-width: 120px;
+    max-width: 100%;
 }
 
 @media (max-width: 768px) {
