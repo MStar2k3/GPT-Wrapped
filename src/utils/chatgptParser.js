@@ -4,6 +4,7 @@
    ============================================ */
 
 import mockUserData from '../data/mockData.js';
+import { API_BASE } from './config.js';
 
 /**
  * Main parser function - handles different file types
@@ -79,7 +80,7 @@ async function parseHtmlFile(file) {
     // Try AI-powered analysis first
     try {
         console.log('🤖 Attempting AI-powered analysis...');
-        const response = await fetch('http://localhost:3001/api/generate/analyze-html', {
+        const response = await fetch(`${API_BASE}/api/generate/analyze-html`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

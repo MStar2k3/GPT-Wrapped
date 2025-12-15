@@ -4,8 +4,7 @@
    ============================================ */
 
 import { createConfetti } from '../../utils/animations.js';
-
-const API_BASE = 'http://localhost:3001';
+import { API_BASE } from '../../utils/config.js';
 
 // Platform format configurations
 const PLATFORM_FORMATS = {

@@ -4,6 +4,7 @@
    ============================================ */
 
 import { router } from '../utils/router.js';
+import { API_BASE } from '../utils/config.js';
 
 let currentModal = null;
 
@@ -669,11 +670,11 @@ function showAuthModal(type) {
     // Google auth button - check backend status first
     document.getElementById('google-signin')?.addEventListener('click', async () => {
       try {
-        const response = await fetch('http://localhost:3001/health');
+        const response = await fetch(`${API_BASE}/health`);
         const data = await response.json();
 
         if (data.oauth) {
-          window.location.href = 'http://localhost:3001/auth/google';
+          window.location.href = `${API_BASE}/auth/google`;
         } else {
           alert('Google OAuth is not configured yet.\n\nTo set it up:\n1. Go to console.cloud.google.com\n2. Create OAuth credentials\n3. Add them to server/.env\n\nFor now, please use "Skip → Try with demo data"');
           closeModal();
