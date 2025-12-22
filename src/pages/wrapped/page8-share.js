@@ -278,8 +278,16 @@ Get yours at aiwrapped.com #AIWrapped2025`;
 function setupShareListeners(container, data) {
   createConfetti(container, 30);
 
+  // Helper for mobile-friendly event handling
+  const addMobileHandler = (selector, handler) => {
+    const el = container.querySelector(selector);
+    if (!el) return;
+    el.addEventListener('click', (e) => { e.preventDefault(); handler(e); });
+    el.addEventListener('touchend', (e) => { e.preventDefault(); handler(e); }, { passive: false });
+  };
+
   // Download button
-  container.querySelector('#download-png')?.addEventListener('click', async () => {
+  addMobileHandler('#download-png', async () => {
     const btn = container.querySelector('#download-png');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<span>⏳ Generating...</span>';
@@ -295,7 +303,7 @@ function setupShareListeners(container, data) {
   });
 
   // Instagram
-  container.querySelector('#share-instagram')?.addEventListener('click', async () => {
+  addMobileHandler('#share-instagram', async () => {
     const btn = container.querySelector('#share-instagram');
     btn.textContent = '⏳ Generating...';
     btn.disabled = true;
@@ -316,7 +324,7 @@ function setupShareListeners(container, data) {
   });
 
   // Twitter
-  container.querySelector('#share-twitter')?.addEventListener('click', async () => {
+  addMobileHandler('#share-twitter', async () => {
     const btn = container.querySelector('#share-twitter');
     btn.textContent = '⏳ Generating...';
     btn.disabled = true;
@@ -331,7 +339,7 @@ function setupShareListeners(container, data) {
   });
 
   // LinkedIn
-  container.querySelector('#share-linkedin')?.addEventListener('click', async () => {
+  addMobileHandler('#share-linkedin', async () => {
     const btn = container.querySelector('#share-linkedin');
     btn.textContent = '⏳ Generating...';
     btn.disabled = true;
