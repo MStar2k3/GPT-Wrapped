@@ -39,23 +39,25 @@ export function renderWrapped() {
     container.className = 'wrapped-container';
 
     container.innerHTML = `
+    <!-- Instagram-Style Story Progress Bar -->
+    <div class="story-progress-bar">
+      ${PAGES.map((page, i) => `
+        <div class="story-progress-segment ${i === 0 ? 'active' : ''}" data-page="${i}">
+          <div class="story-progress-fill"></div>
+        </div>
+      `).join('')}
+    </div>
+    
+    <!-- Page Counter -->
+    <div class="page-counter">
+      <span id="current-page-num">1</span> / <span id="total-pages">${PAGES.length}</span>
+    </div>
+
     <!-- Animated Background -->
     <div class="bg-animated">
       <div class="orb orb-cyan" style="width: 500px; height: 500px; top: -150px; left: -100px;"></div>
       <div class="orb orb-purple" style="width: 400px; height: 400px; bottom: -100px; right: -50px;"></div>
       <div class="orb orb-pink" style="width: 300px; height: 300px; top: 40%; left: 70%;"></div>
-    </div>
-
-    <!-- Navigation Dots -->
-    <nav class="nav-dots" aria-label="Page navigation">
-      ${PAGES.map((page, i) => `
-        <button class="nav-dot ${i === 0 ? 'active' : ''}" data-page="${i}" aria-label="Page ${i + 1}: ${page.title}"></button>
-      `).join('')}
-    </nav>
-
-    <!-- Progress Bar -->
-    <div class="wrapped-progress">
-      <div class="wrapped-progress-bar" style="width: ${(1 / PAGES.length) * 100}%"></div>
     </div>
 
     <!-- Page Container -->
@@ -65,17 +67,62 @@ export function renderWrapped() {
       </div>
     </div>
 
-    <!-- Navigation Arrows -->
-    <button class="nav-arrow nav-arrow-prev hidden" id="prev-btn" aria-label="Previous page">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <!-- Mobile Navigation Buttons (Left/Right edges) -->
+    <button class="mobile-nav-btn mobile-nav-prev" id="mobile-prev" aria-label="Previous">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
-    <button class="nav-arrow nav-arrow-next" id="next-btn" aria-label="Next page">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <button class="mobile-nav-btn mobile-nav-next" id="mobile-next" aria-label="Next">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+        <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
+
+    <!-- Bottom Toolbar -->
+    <div class="bottom-toolbar">
+      <div class="toolbar-pill toolbar-year">
+        <span>2025</span>
+      </div>
+      <button class="toolbar-btn toolbar-grid" id="toolbar-grid" aria-label="View all slides">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+      </button>
+      <button class="toolbar-btn toolbar-share" id="toolbar-share" aria-label="Share">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+          <polyline points="16 6 12 2 8 6"/>
+          <line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+      </button>
+      <button class="toolbar-btn toolbar-download" id="toolbar-download" aria-label="Download">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Grid View Modal -->
+    <div class="grid-modal hidden" id="grid-modal">
+      <div class="grid-modal-content">
+        <button class="grid-modal-close" id="grid-modal-close">×</button>
+        <h3>All Slides</h3>
+        <div class="grid-thumbnails" id="grid-thumbnails">
+          ${PAGES.map((page, i) => `
+            <button class="grid-thumb" data-page="${i}">
+              <span class="grid-thumb-num">${i + 1}</span>
+              <span class="grid-thumb-title">${page.title}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
 
     <!-- Back to Home -->
     <a href="/" class="back-home" id="back-home">
@@ -98,47 +145,108 @@ export function renderWrapped() {
 
 function initWrapped(container) {
     const pageWrapper = container.querySelector('#page-wrapper');
-    const navDots = container.querySelectorAll('.nav-dot');
-    const prevBtn = container.querySelector('#prev-btn');
-    const nextBtn = container.querySelector('#next-btn');
-    const progressBar = container.querySelector('.wrapped-progress-bar');
+    const storySegments = container.querySelectorAll('.story-progress-segment');
+    const pageCounter = container.querySelector('#current-page-num');
+    const mobilePrev = container.querySelector('#mobile-prev');
+    const mobileNext = container.querySelector('#mobile-next');
+    const gridBtn = container.querySelector('#toolbar-grid');
+    const shareBtn = container.querySelector('#toolbar-share');
+    const downloadBtn = container.querySelector('#toolbar-download');
+    const gridModal = container.querySelector('#grid-modal');
+    const gridClose = container.querySelector('#grid-modal-close');
+    const gridThumbs = container.querySelectorAll('.grid-thumb');
     const backHome = container.querySelector('#back-home');
 
     // Render first page
     renderCurrentPage(pageWrapper);
+    updateStoryProgress(storySegments, pageCounter);
 
-    // Navigation dot clicks
-    navDots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
+    // Mobile touch handler helper
+    const addMobileHandler = (el, handler) => {
+        if (!el) return;
+        el.addEventListener('click', (e) => { e.preventDefault(); handler(e); });
+        el.addEventListener('touchend', (e) => { e.preventDefault(); handler(e); }, { passive: false });
+    };
+
+    // Mobile navigation buttons
+    addMobileHandler(mobilePrev, () => {
+        if (!isTransitioning && currentPage > 0) {
+            navigateToPage(currentPage - 1, pageWrapper, storySegments, pageCounter);
+        }
+    });
+
+    addMobileHandler(mobileNext, () => {
+        if (!isTransitioning && currentPage < PAGES.length - 1) {
+            navigateToPage(currentPage + 1, pageWrapper, storySegments, pageCounter);
+        }
+    });
+
+    // Story segment clicks
+    storySegments.forEach((segment, index) => {
+        addMobileHandler(segment, () => {
             if (!isTransitioning && index !== currentPage) {
-                navigateToPage(index, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
+                navigateToPage(index, pageWrapper, storySegments, pageCounter);
             }
         });
     });
 
-    // Arrow navigation
-    prevBtn.addEventListener('click', () => {
-        if (!isTransitioning && currentPage > 0) {
-            navigateToPage(currentPage - 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
-        }
+    // Grid view
+    addMobileHandler(gridBtn, () => {
+        gridModal.classList.remove('hidden');
     });
 
-    nextBtn.addEventListener('click', () => {
-        if (!isTransitioning && currentPage < PAGES.length - 1) {
-            navigateToPage(currentPage + 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
-        }
+    addMobileHandler(gridClose, () => {
+        gridModal.classList.add('hidden');
+    });
+
+    gridThumbs.forEach((thumb) => {
+        addMobileHandler(thumb, () => {
+            const page = parseInt(thumb.dataset.page);
+            gridModal.classList.add('hidden');
+            if (!isTransitioning && page !== currentPage) {
+                navigateToPage(page, pageWrapper, storySegments, pageCounter);
+            }
+        });
+    });
+
+    // Share button
+    addMobileHandler(shareBtn, async () => {
+        shareBtn.innerHTML = '⏳';
+        await shareCurrentSlide();
+        setTimeout(() => {
+            shareBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>`;
+        }, 1500);
+    });
+
+    // Download button
+    addMobileHandler(downloadBtn, async () => {
+        downloadBtn.innerHTML = '⏳';
+        await downloadCurrentSlide();
+        setTimeout(() => {
+            downloadBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>`;
+        }, 1500);
     });
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
             if (!isTransitioning && currentPage < PAGES.length - 1) {
-                navigateToPage(currentPage + 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
+                navigateToPage(currentPage + 1, pageWrapper, storySegments, pageCounter);
             }
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
             if (!isTransitioning && currentPage > 0) {
-                navigateToPage(currentPage - 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
+                navigateToPage(currentPage - 1, pageWrapper, storySegments, pageCounter);
             }
+        } else if (e.key === 'Escape') {
+            gridModal.classList.add('hidden');
         }
     });
 
@@ -161,17 +269,17 @@ function initWrapped(container) {
         if (Math.abs(diffX) > Math.abs(diffY)) {
             if (Math.abs(diffX) > 50) {
                 if (diffX > 0 && currentPage < PAGES.length - 1) {
-                    navigateToPage(currentPage + 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
+                    navigateToPage(currentPage + 1, pageWrapper, storySegments, pageCounter);
                 } else if (diffX < 0 && currentPage > 0) {
-                    navigateToPage(currentPage - 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
+                    navigateToPage(currentPage - 1, pageWrapper, storySegments, pageCounter);
                 }
             }
         } else {
             if (Math.abs(diffY) > 50) {
                 if (diffY > 0 && currentPage < PAGES.length - 1) {
-                    navigateToPage(currentPage + 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
+                    navigateToPage(currentPage + 1, pageWrapper, storySegments, pageCounter);
                 } else if (diffY < 0 && currentPage > 0) {
-                    navigateToPage(currentPage - 1, pageWrapper, navDots, progressBar, prevBtn, nextBtn);
+                    navigateToPage(currentPage - 1, pageWrapper, storySegments, pageCounter);
                 }
             }
         }
@@ -186,7 +294,36 @@ function initWrapped(container) {
     });
 }
 
-async function navigateToPage(newPage, wrapper, dots, progressBar, prevBtn, nextBtn) {
+// Update story progress bar
+function updateStoryProgress(segments, counter) {
+    segments.forEach((seg, i) => {
+        seg.classList.remove('active', 'completed');
+        if (i < currentPage) {
+            seg.classList.add('completed');
+        } else if (i === currentPage) {
+            seg.classList.add('active');
+        }
+    });
+    if (counter) {
+        counter.textContent = currentPage + 1;
+    }
+}
+
+// Share current slide
+async function shareCurrentSlide() {
+    const { sharePageImage } = await import('../../utils/screenshotCapture.js');
+    const data = getWrappedData() || mockUserData;
+    await sharePageImage(currentPage + 1, data);
+}
+
+// Download current slide
+async function downloadCurrentSlide() {
+    const { downloadPageImage } = await import('../../utils/screenshotCapture.js');
+    const data = getWrappedData() || mockUserData;
+    await downloadPageImage(currentPage + 1, data);
+}
+
+async function navigateToPage(newPage, wrapper, storySegments, pageCounter) {
     if (isTransitioning) return;
     isTransitioning = true;
 
@@ -201,16 +338,8 @@ async function navigateToPage(newPage, wrapper, dots, progressBar, prevBtn, next
     // Update current page
     currentPage = newPage;
 
-    // Update UI
-    dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === currentPage);
-    });
-
-    progressBar.style.width = `${((currentPage + 1) / PAGES.length) * 100}%`;
-
-    // Update arrow visibility
-    prevBtn.classList.toggle('hidden', currentPage === 0);
-    nextBtn.classList.toggle('hidden', currentPage === PAGES.length - 1);
+    // Update story progress
+    updateStoryProgress(storySegments, pageCounter);
 
     // Render new page
     renderCurrentPage(wrapper);
