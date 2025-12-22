@@ -687,7 +687,13 @@
 
 @media (max-width: 640px) {
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
+        margin-bottom: var(--space-4);
+    }
+
+    .hero-subtitle {
+        font-size: var(--font-size-base);
+        margin-bottom: var(--space-6);
     }
 
     .features-grid {
@@ -698,8 +704,29 @@
         display: none;
     }
 
+    /* Improved mobile CTA buttons */
     .hero-cta {
         flex-direction: column;
+        gap: var(--space-3);
+        width: 100%;
+        padding: 0 var(--space-2);
+    }
+
+    .hero-cta .btn {
+        width: 100%;
+        min-height: 56px;
+        font-size: var(--font-size-lg);
+        border-radius: var(--radius-xl);
+    }
+
+    .hero-cta .btn-primary {
+        background: var(--gradient-primary);
+        box-shadow: 0 4px 20px rgba(0, 240, 255, 0.3);
+    }
+
+    .hero-cta .btn-secondary {
+        background: var(--bg-glass);
+        border: 2px solid var(--border-hover);
     }
 
     .hero-stats {
@@ -714,5 +741,60 @@
 
     .badges-showcase {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Smaller hero card on mobile */
+    .hero-card,
+    .hero-card-large {
+        width: 280px;
+        padding: var(--space-4);
+    }
+
+    .hero-card-large .stat-number {
+        font-size: 2.5rem;
+    }
+
+    /* Trust section */
+    .hero-trust {
+        padding: var(--space-4);
+    }
+
+    .trust-avatars {
+        gap: var(--space-1);
+    }
+
+    .trust-text {
+        font-size: var(--font-size-sm);
+    }
+
+    /* Hide hero visual on very small screens if needed */
+    .hero-visual {
+        margin-bottom: var(--space-4);
+    }
+
+    /* Feature cards */
+    .feature-card {
+        padding: var(--space-6);
+    }
+
+    /* Steps */
+    .step-number {
+        width: 50px;
+        height: 50px;
+        font-size: var(--font-size-xl);
+    }
+
+    /* CTA section */
+    .cta-card {
+        padding: var(--space-8);
+    }
+
+    .cta-title {
+        font-size: var(--font-size-2xl);
+    }
+
+    /* Section titles */
+    .section-title {
+        font-size: var(--font-size-2xl);
     }
 }
