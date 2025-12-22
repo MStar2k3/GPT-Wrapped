@@ -2404,3 +2404,402 @@
         padding-top: 60px;
     }
 }
+
+/* ============================================
+   22-SLIDE SYSTEM - DARK BACKGROUND
+   ============================================ */
+.wrapped-dark {
+    background: #0a0a0f;
+}
+
+.dark-bg {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, #0a0a0f 0%, #121218 50%, #0a0a0f 100%);
+    z-index: -1;
+}
+
+/* ============================================
+   SLIDE CONTAINER
+   ============================================ */
+.slide-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 70px 20px 100px;
+}
+
+.slide-wrapper {
+    width: 100%;
+    max-width: 400px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* ============================================
+   SLIDE CARD - MAIN STYLES
+   ============================================ */
+.slide-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    border-radius: 24px;
+    padding: 40px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.slide-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+    gap: 16px;
+}
+
+/* ============================================
+   SLIDE TYPOGRAPHY
+   ============================================ */
+.slide-emoji {
+    font-size: 48px;
+    margin-bottom: 8px;
+}
+
+.slide-label {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 12px;
+}
+
+.slide-big-stat {
+    font-size: 72px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.slide-subtext {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 8px;
+}
+
+.slide-title-quote {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    font-style: italic;
+    max-width: 90%;
+    line-height: 1.4;
+}
+
+.slide-substats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 12px;
+}
+
+.stat-divider {
+    opacity: 0.5;
+}
+
+.slide-sentence {
+    font-size: 18px;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1.5;
+    max-width: 90%;
+    font-style: italic;
+}
+
+.slide-quote-box {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 16px 20px;
+    border-radius: 16px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+    max-width: 90%;
+    line-height: 1.5;
+    margin-top: 12px;
+}
+
+.slide-final-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 12px;
+}
+
+.slide-hashtag {
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 20px;
+}
+
+/* ============================================
+   CAPTION PILL
+   ============================================ */
+.slide-caption-pill {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+}
+
+/* ============================================
+   PER-SLIDE ACTION BUTTONS
+   ============================================ */
+.slide-action-buttons {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+}
+
+.slide-action-btn {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    backdrop-filter: blur(10px);
+}
+
+.slide-action-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+    transform: scale(1.1);
+}
+
+.slide-action-btn:active {
+    transform: scale(0.95);
+}
+
+/* ============================================
+   TOPICS LIST
+   ============================================ */
+.topics-list {
+    width: 100%;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.topic-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #fff;
+}
+
+.topic-name {
+    font-weight: 500;
+}
+
+.topic-count {
+    font-weight: 700;
+    opacity: 0.8;
+}
+
+/* ============================================
+   DAY VS NIGHT SPLIT
+   ============================================ */
+.day-night-split {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.split-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.split-emoji {
+    font-size: 32px;
+}
+
+.split-percent {
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+}
+
+.split-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.split-divider {
+    width: 1px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   BADGES GRID
+   ============================================ */
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 280px;
+}
+
+.badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 14px 8px;
+    border-radius: 12px;
+}
+
+.badge-icon {
+    font-size: 28px;
+}
+
+.badge-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+}
+
+/* ============================================
+   FACTS LIST
+   ============================================ */
+.facts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 300px;
+}
+
+.fact-item {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.4;
+    text-align: left;
+}
+
+/* ============================================
+   MOBILE SLIDE OPTIMIZATIONS
+   ============================================ */
+@media (max-width: 480px) {
+    .slide-container {
+        padding: 60px 16px 90px;
+    }
+
+    .slide-card {
+        aspect-ratio: 9 / 16;
+        border-radius: 20px;
+        padding: 30px 20px 70px;
+    }
+
+    .slide-emoji {
+        font-size: 40px;
+    }
+
+    .slide-label {
+        font-size: 12px;
+        letter-spacing: 2px;
+    }
+
+    .slide-big-stat {
+        font-size: 56px;
+    }
+
+    .slide-subtext {
+        font-size: 14px;
+    }
+
+    .slide-caption-pill {
+        font-size: 12px;
+        padding: 8px 16px;
+        bottom: 70px;
+    }
+
+    .slide-action-buttons {
+        bottom: 20px;
+        gap: 12px;
+    }
+
+    .slide-action-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .topics-list {
+        max-width: 260px;
+    }
+
+    .topic-row {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .badges-grid {
+        max-width: 260px;
+        gap: 10px;
+    }
+
+    .badge-item {
+        padding: 12px 6px;
+    }
+
+    .badge-icon {
+        font-size: 24px;
+    }
+
+    .badge-name {
+        font-size: 9px;
+    }
+}

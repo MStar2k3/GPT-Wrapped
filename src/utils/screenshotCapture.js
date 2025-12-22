@@ -706,7 +706,6 @@ export function createFloatingButtons(container, pageData, pageType) {
         } catch (err) {
             console.error('Capture failed:', err);
             btn.classList.remove('loading');
-            alert('Download completed! Check your downloads folder.');
         }
     });
 
@@ -730,4 +729,34 @@ export function createFloatingButtons(container, pageData, pageType) {
     });
 }
 
-export default { generatePageImage, downloadImage, shareToSocial, createFloatingButtons };
+// Download a specific page as image
+export async function downloadPageImage(pageNum, data) {
+    try {
+        const pageTypes = ['year', 'prompts', 'conversations', 'topics', 'curiosity', 'promptLength', 'words', 'activeDay', 'peakHour', 'dayNight', 'carried', 'delulu', 'longestConvo', 'villainArc', 'fbiConcern', 'touchGrass', 'model', 'summary', 'rizzless', 'badges', 'quirky', 'final'];
+        const pageType = pageTypes[pageNum - 1] || 'default';
+        const canvas = await generatePageImage(data, pageType);
+        await downloadImage(canvas, `gpt-wrapped-slide-${pageNum}.png`);
+        return true;
+    } catch (err) {
+        console.error('Download page failed:', err);
+        return false;
+    }
+}
+
+// Share a specific page
+export async function sharePageImage(pageNum, data) {
+    try {
+        const pageTypes = ['year', 'prompts', 'conversations', 'topics', 'curiosity', 'promptLength', 'words', 'activeDay', 'peakHour', 'dayNight', 'carried', 'delulu', 'longestConvo', 'villainArc', 'fbiConcern', 'touchGrass', 'model', 'summary', 'rizzless', 'badges', 'quirky', 'final'];
+        const pageType = pageTypes[pageNum - 1] || 'default';
+        const canvas = await generatePageImage(data, pageType);
+
+        const shareText = `My GPT Wrapped 2025 🤖✨
+Get yours at gptwrapped.app #GPTWrapped2025`;
+
+        await shareToSocial(canvas, 'default', shareText);
+        return true;
+    } catch (err) {
+        console.error('Share page failed:', err);
+        return false;
+    }
+}
