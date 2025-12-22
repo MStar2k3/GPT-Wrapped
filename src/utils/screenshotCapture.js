@@ -1,590 +1,389 @@
 /* ============================================
-   SCREENSHOT CAPTURE UTILITY
-   Client-side canvas-based screenshot with full graphics
+   SCREENSHOT CAPTURE UTILITY - NEW 22-SLIDE DESIGN
+   Generates images matching the new gradient slide designs
    ============================================ */
 
-// Generate full graphics screenshot with all slide content
-export async function generatePageImage(pageData, pageType) {
+import { SLIDES } from '../data/slides.js';
+
+// Color parsing for canvas gradients
+const GRADIENT_COLORS = {
+    purple: ['#667eea', '#764ba2'],
+    orange: ['#f093fb', '#f5576c'],
+    teal: ['#4facfe', '#00f2fe'],
+    blue: ['#667eea', '#764ba2'],
+    pink: ['#f093fb', '#f5576c'],
+    yellow: ['#f5af19', '#f12711'],
+    green: ['#11998e', '#38ef7d'],
+    cyan: ['#00c6fb', '#005bea'],
+    red: ['#eb3349', '#f45c43'],
+    gold: ['#f7971e', '#ffd200'],
+    deepPurple: ['#6a11cb', '#2575fc'],
+    sunset: ['#fa709a', '#fee140'],
+    ocean: ['#2193b0', '#6dd5ed'],
+    forest: ['#134e5e', '#71b280'],
+    fire: ['#f12711', '#f5af19'],
+    violet: ['#7f00ff', '#e100ff'],
+    aqua: ['#13547a', '#80d0c7'],
+    coral: ['#ff9a9e', '#fecfef'],
+    midnight: ['#232526', '#414345'],
+    electric: ['#00f260', '#0575e6'],
+    rose: ['#ee9ca7', '#ffdde1'],
+    lavender: ['#a18cd1', '#fbc2eb']
+};
+
+// Get gradient colors for a slide
+function getSlideGradient(slideIndex) {
+    const slide = SLIDES[slideIndex];
+    if (!slide) return ['#667eea', '#764ba2'];
+
+    // Parse the gradient type from the slide config
+    const gradientStr = slide.gradient;
+    for (const [name, colors] of Object.entries(GRADIENT_COLORS)) {
+        if (gradientStr.includes(colors[0])) {
+            return colors;
+        }
+    }
+    return ['#667eea', '#764ba2'];
+}
+
+// Generate slide image with new gradient design
+export async function generatePageImage(pageData, pageType, slideIndex = 0) {
     const canvas = document.createElement('canvas');
     const width = 1080;
-    const height = 1350; // Taller for more content (LinkedIn format)
+    const height = 1920; // 9:16 aspect ratio for stories
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
 
-    // Background gradient
+    // Determine slide index if not provided
+    if (typeof pageType === 'string') {
+        slideIndex = SLIDES.findIndex(s => s.type === pageType);
+        if (slideIndex === -1) slideIndex = 0;
+    }
+
+    const slide = SLIDES[slideIndex];
+    const colors = getSlideGradient(slideIndex);
+    const data = slide ? slide.getData(pageData) : {};
+    const emoji = typeof slide?.emoji === 'function' ? slide.emoji(pageData) : (slide?.emoji || '✨');
+
+    // Draw gradient background
     const bgGradient = ctx.createLinearGradient(0, 0, width, height);
-    bgGradient.addColorStop(0, '#0a0a1a');
-    bgGradient.addColorStop(0.3, '#1a1a2e');
-    bgGradient.addColorStop(0.6, '#16213e');
-    bgGradient.addColorStop(1, '#0f0f23');
+    bgGradient.addColorStop(0, colors[0]);
+    bgGradient.addColorStop(1, colors[1]);
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Stars
-    for (let i = 0; i < 80; i++) {
+    // Add subtle noise texture overlay
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+    for (let i = 0; i < 100; i++) {
         ctx.beginPath();
-        ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 2 + 0.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.6 + 0.2})`;
+        ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 3 + 1, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    // Glow orbs
-    const drawGlow = (x, y, r, color, opacity = 0.15) => {
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`));
-        g.addColorStop(1, 'transparent');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-    };
-    drawGlow(150, 150, 400, 'rgb(0, 240, 255)');
-    drawGlow(930, 1200, 400, 'rgb(139, 0, 255)');
-    drawGlow(540, 675, 300, 'rgb(255, 0, 168)', 0.08);
-
-    // Card background
-    const cx = 60, cy = 100, cw = 960, ch = 1150;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.beginPath();
-    ctx.roundRect(cx, cy, cw, ch, 30);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Logo header
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '600 28px Inter, Arial, sans-serif';
+    // Draw emoji
+    ctx.font = '80px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('✨ AI Wrapped 2025', 540, 160);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(emoji, width / 2, 450);
 
-    // Page-specific full content
-    ctx.textAlign = 'center';
+    // Draw label
+    ctx.font = '700 28px Arial, sans-serif';
+    ctx.letterSpacing = '4px';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillText(slide?.label || '', width / 2, 550);
 
-    switch (pageType) {
-        case 'year':
-            drawYearSlide(ctx, pageData, width, height);
+    // Draw main content based on slide type
+    ctx.fillStyle = '#fff';
+
+    switch (slide?.type) {
+        case 'year_intro':
+        case 'total_prompts':
+        case 'conversations':
+        case 'avg_prompt_length':
+        case 'total_words':
+        case 'most_active_day':
+        case 'peak_hour':
+        case 'carried_score':
+        case 'touch_grass':
+        case 'most_used_model':
+        case 'curiosity_score':
+        case 'delulu_index':
+            drawBigStatSlide(ctx, data, width, height);
             break;
-        case 'personality':
-            drawPersonalitySlide(ctx, pageData, width, height);
+
+        case 'top_topics':
+            drawTopicsSlide(ctx, data, width, height);
             break;
-        case 'topic':
-            drawTopicSlide(ctx, pageData, width, height);
+
+        case 'day_vs_night':
+            drawDayNightSlide(ctx, data, width, height);
             break;
-        case 'tokens':
-            drawTokensSlide(ctx, pageData, width, height);
+
+        case 'longest_convo':
+        case 'villain_arc':
+            drawConvoSlide(ctx, data, slide.type, width, height);
             break;
-        case 'speed':
-            drawSpeedSlide(ctx, pageData, width, height);
+
+        case 'fbi_concern':
+        case 'rizzless_prompt':
+            drawQuoteSlide(ctx, data, slide.type, width, height);
             break;
-        case 'stats':
-            drawStatsSlide(ctx, pageData, width, height);
+
+        case 'summary_sentence':
+            drawSentenceSlide(ctx, data, width, height);
             break;
+
         case 'badges':
-            drawBadgesSlide(ctx, pageData, width, height);
+            drawBadgesSlide(ctx, data, width, height);
             break;
+
+        case 'quirky_facts':
+            drawFactsSlide(ctx, data, width, height);
+            break;
+
+        case 'final_wrap':
+            drawFinalSlide(ctx, data, width, height);
+            break;
+
         default:
-            drawDefaultSlide(ctx, pageData, width, height);
+            drawBigStatSlide(ctx, data, width, height);
+    }
+
+    // Draw caption pill at bottom
+    if (slide?.caption) {
+        const captionWidth = ctx.measureText(slide.caption).width + 60;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.beginPath();
+        ctx.roundRect((width - captionWidth) / 2, height - 280, captionWidth, 50, 25);
+        ctx.fill();
+
+        ctx.font = '500 18px Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.textAlign = 'center';
+        ctx.fillText(slide.caption, width / 2, height - 247);
     }
 
     // Watermark
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.font = '400 24px Inter, Arial, sans-serif';
+    ctx.font = '400 20px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.textAlign = 'center';
-    ctx.fillText('✨ Get yours at aiwrapped.com', 540, 1300);
+    ctx.fillText('gptwrapped.app #GPTWrapped2025', width / 2, height - 80);
 
     return canvas;
 }
 
-// Year Slide - Full graphics
-function drawYearSlide(ctx, data, w, h) {
-    const conversations = data.totalConversations || 847;
-    const personality = data.type || 'The Explorer';
-    const icon = data.icon || '🧪';
+// Draw big stat centered slide
+function drawBigStatSlide(ctx, data, w, h) {
+    ctx.font = '800 120px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(data.bigStat || '--', w / 2, h / 2 + 40);
 
-    // Title
-    ctx.fillStyle = 'white';
-    ctx.font = '700 42px Inter, Arial, sans-serif';
-    ctx.fillText('Your 2025 AI Year', 540, 250);
-
-    // Main stat with glow effect
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 30;
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = '900 160px Inter, Arial, sans-serif';
-    ctx.fillText(conversations.toString(), 540, 480);
-    ctx.shadowBlur = 0;
-
-    // Label
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '500 36px Inter, Arial, sans-serif';
-    ctx.fillText('conversations', 540, 550);
-
-    // Divider line
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(340, 620);
-    ctx.lineTo(740, 620);
-    ctx.stroke();
-
-    // Personality section
-    ctx.font = '80px Inter, Arial, sans-serif';
-    ctx.fillText(icon, 540, 740);
-
-    ctx.fillStyle = 'white';
-    ctx.font = '700 48px Inter, Arial, sans-serif';
-    ctx.fillText(personality, 540, 830);
-
-    // Description
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '400 28px Inter, Arial, sans-serif';
-    const description = data.description || 'You love exploring new ideas with AI';
-    wrapText(ctx, description, 540, 900, 800, 38);
-
-    // Badges row
-    const badges = data.badges?.filter(b => b.earned)?.slice(0, 5) || [];
-    if (badges.length > 0) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '500 24px Inter, Arial, sans-serif';
-        ctx.fillText('Badges Earned', 540, 1020);
-
-        ctx.font = '50px Inter, Arial, sans-serif';
-        const badgeText = badges.map(b => b.icon).join('  ');
-        ctx.fillText(badgeText, 540, 1090);
+    if (data.subtext) {
+        ctx.font = '500 28px Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillText(data.subtext, w / 2, h / 2 + 100);
     }
-
-    // Stats row
-    drawStatsRow(ctx, data, 540, 1170);
 }
 
-// Personality Slide - Full graphics
-function drawPersonalitySlide(ctx, data, w, h) {
-    const icon = data.icon || '🧪';
-    const type = data.type || 'The Explorer';
-    const description = data.description || 'You love diving deep into topics and exploring new ideas.';
-    const traits = data.traits || ['Curious', 'Analytical', 'Creative'];
+// Draw topics list slide
+function drawTopicsSlide(ctx, data, w, h) {
+    const topics = data.topics || [];
+    const startY = h / 2 - (topics.length * 35);
 
-    // Title
-    ctx.fillStyle = 'white';
-    ctx.font = '700 42px Inter, Arial, sans-serif';
-    ctx.fillText('Your AI Personality', 540, 250);
+    topics.forEach((topic, i) => {
+        const y = startY + i * 70;
 
-    // Large icon
-    ctx.font = '200px Inter, Arial, sans-serif';
-    ctx.fillText(icon, 540, 520);
-
-    // Type with gradient effect
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 20;
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = '700 64px Inter, Arial, sans-serif';
-    ctx.fillText(type, 540, 650);
-    ctx.shadowBlur = 0;
-
-    // Description
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '400 30px Inter, Arial, sans-serif';
-    wrapText(ctx, description, 540, 740, 800, 42);
-
-    // Traits as pills
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '500 24px Inter, Arial, sans-serif';
-    ctx.fillText('Your traits', 540, 880);
-
-    const traitWidth = 160;
-    const startX = 540 - ((traits.length - 1) * traitWidth / 2);
-    traits.forEach((trait, i) => {
-        const x = startX + i * traitWidth;
-        // Pill background
-        ctx.fillStyle = 'rgba(139, 0, 255, 0.2)';
+        // Topic row background
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.beginPath();
-        ctx.roundRect(x - 70, 910, 140, 45, 22);
+        ctx.roundRect(w / 2 - 200, y - 25, 400, 55, 12);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(139, 0, 255, 0.5)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        // Text
-        ctx.fillStyle = '#c77dff';
-        ctx.font = '500 22px Inter, Arial, sans-serif';
-        ctx.fillText(trait, x, 940);
+
+        // Topic name
+        ctx.font = '500 24px Arial, sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'left';
+        ctx.fillText(topic.name, w / 2 - 180, y + 8);
+
+        // Topic count
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.fillText(topic.count?.toString() || '', w / 2 + 180, y + 8);
     });
 
-    // Stats at bottom
-    drawStatsRow(ctx, data, 540, 1100);
+    ctx.textAlign = 'center';
 }
 
-// Topic Slide - Full graphics
-function drawTopicSlide(ctx, data, w, h) {
-    const icon = data.icon || '💻';
-    const name = (data.name || 'Coding').toUpperCase();
-    const conversations = data.conversations || 150;
-    const percentage = data.percentage || 35;
+// Draw day vs night split slide
+function drawDayNightSlide(ctx, data, w, h) {
+    const centerY = h / 2;
 
-    // Title
-    ctx.fillStyle = 'white';
-    ctx.font = '700 42px Inter, Arial, sans-serif';
-    ctx.fillText('Your #1 Topic', 540, 250);
-
-    // Topic icon
-    ctx.font = '150px Inter, Arial, sans-serif';
-    ctx.fillText(icon, 540, 470);
-
-    // Topic name
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 25;
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = '800 72px Inter, Arial, sans-serif';
-    ctx.fillText(name, 540, 600);
-    ctx.shadowBlur = 0;
-
-    // Progress bar
-    const barWidth = 700;
-    const barHeight = 20;
-    const barX = 540 - barWidth / 2;
-    const barY = 680;
-
-    // Background
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.beginPath();
-    ctx.roundRect(barX, barY, barWidth, barHeight, 10);
-    ctx.fill();
-
-    // Fill
-    const gradient = ctx.createLinearGradient(barX, 0, barX + barWidth, 0);
-    gradient.addColorStop(0, '#00f0ff');
-    gradient.addColorStop(1, '#8b00ff');
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.roundRect(barX, barY, barWidth * (percentage / 100), barHeight, 10);
-    ctx.fill();
-
-    // Percentage
-    ctx.fillStyle = 'white';
-    ctx.font = '800 100px Inter, Arial, sans-serif';
-    ctx.fillText(`${percentage}%`, 540, 830);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '400 32px Inter, Arial, sans-serif';
-    ctx.fillText('of your conversations', 540, 890);
-
-    // Conversation count
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '500 28px Inter, Arial, sans-serif';
-    ctx.fillText(`${conversations} conversations about ${data.name || 'this topic'}`, 540, 980);
-
-    // Fun fact
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '400 26px Inter, Arial, sans-serif';
-    const insight = data.insight || `You're clearly passionate about ${data.name || 'this'}!`;
-    wrapText(ctx, insight, 540, 1080, 800, 36);
-}
-
-// Tokens Slide - Full graphics
-function drawTokensSlide(ctx, data, w, h) {
-    const totalTokens = data.totalTokens || 2500000;
-    const avgPerConversation = data.avgTokensPerConversation || 3000;
-    const booksEquivalent = data.booksEquivalent || Math.round(totalTokens / 100000);
-
-    // Title
-    ctx.fillStyle = 'white';
-    ctx.font = '700 42px Inter, Arial, sans-serif';
-    ctx.fillText('Token Consumption', 540, 250);
-
-    // Token icon
-    ctx.font = '100px Inter, Arial, sans-serif';
-    ctx.fillText('🔣', 540, 400);
-
-    // Main stat
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 25;
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = '900 100px Inter, Arial, sans-serif';
-    ctx.fillText(formatNumber(totalTokens), 540, 550);
-    ctx.shadowBlur = 0;
-
+    // Day side
+    ctx.font = '60px Arial';
+    ctx.fillText('☀️', w / 2 - 120, centerY - 40);
+    ctx.font = '800 56px Arial, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(`${data.dayPercentage || 40}%`, w / 2 - 120, centerY + 30);
+    ctx.font = '500 18px Arial, sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '500 36px Inter, Arial, sans-serif';
-    ctx.fillText('tokens processed', 540, 610);
+    ctx.fillText('DAYTIME', w / 2 - 120, centerY + 70);
 
     // Divider
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(340, 680);
-    ctx.lineTo(740, 680);
+    ctx.moveTo(w / 2, centerY - 80);
+    ctx.lineTo(w / 2, centerY + 80);
     ctx.stroke();
 
-    // Fun comparison
-    ctx.font = '60px Inter, Arial, sans-serif';
-    ctx.fillText('📚', 540, 780);
-
-    ctx.fillStyle = 'white';
-    ctx.font = '700 48px Inter, Arial, sans-serif';
-    ctx.fillText(`That's ${booksEquivalent} books!`, 540, 860);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '400 26px Inter, Arial, sans-serif';
-    ctx.fillText('worth of text processed by AI', 540, 910);
-
-    // Average stat
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '500 28px Inter, Arial, sans-serif';
-    ctx.fillText(`~${formatNumber(avgPerConversation)} tokens per conversation`, 540, 1020);
-
-    // Visual representation
-    drawTokenBars(ctx, totalTokens, 540, 1120);
-}
-
-// Speed Slide - Full graphics
-function drawSpeedSlide(ctx, data, w, h) {
-    const avgTime = data.avgResponseTime || 2.5;
-    const fastestTime = data.fastestResponseTime || 0.8;
-
-    // Title
-    ctx.fillStyle = 'white';
-    ctx.font = '700 42px Inter, Arial, sans-serif';
-    ctx.fillText('Speed Stats', 540, 250);
-
-    // Lightning icon
-    ctx.font = '120px Inter, Arial, sans-serif';
-    ctx.fillText('⚡', 540, 430);
-
-    // Main stat
-    ctx.shadowColor = '#ffee00';
-    ctx.shadowBlur = 30;
-    ctx.fillStyle = '#ffee00';
-    ctx.font = '900 120px Inter, Arial, sans-serif';
-    ctx.fillText(`${avgTime}s`, 540, 600);
-    ctx.shadowBlur = 0;
-
+    // Night side
+    ctx.font = '60px Arial';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('🌙', w / 2 + 120, centerY - 40);
+    ctx.font = '800 56px Arial, sans-serif';
+    ctx.fillText(`${data.nightPercentage || 60}%`, w / 2 + 120, centerY + 30);
+    ctx.font = '500 18px Arial, sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.font = '500 36px Inter, Arial, sans-serif';
-    ctx.fillText('average response time', 540, 670);
-
-    // Fastest time
-    ctx.fillStyle = 'white';
-    ctx.font = '700 36px Inter, Arial, sans-serif';
-    ctx.fillText(`Fastest: ${fastestTime}s`, 540, 780);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '400 24px Inter, Arial, sans-serif';
-    ctx.fillText('Lightning fast AI responses! ⚡', 540, 830);
-
-    // Speed meter visual
-    drawSpeedMeter(ctx, avgTime, 540, 1000);
+    ctx.fillText('NIGHTTIME', w / 2 + 120, centerY + 70);
 }
 
-// Stats Slide - Full graphics
-function drawStatsSlide(ctx, data, w, h) {
+// Draw conversation detail slide
+function drawConvoSlide(ctx, data, type, w, h) {
+    ctx.font = '600 28px Arial, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+
     // Title
-    ctx.fillStyle = 'white';
-    ctx.font = '700 42px Inter, Arial, sans-serif';
-    ctx.fillText('Your Stats Overview', 540, 250);
+    const title = data.title || '"Unknown conversation"';
+    wrapText(ctx, title, w / 2, h / 2 - 20, w - 200, 36);
 
-    const stats = [
-        { icon: '💬', value: data.totalConversations || 847, label: 'Conversations' },
-        { icon: '📅', value: data.activeDays || 180, label: 'Active Days' },
-        { icon: '🔤', value: formatNumber(data.totalTokens || 2500000), label: 'Tokens' },
-        { icon: '📊', value: data.topicsExplored || 12, label: 'Topics' }
-    ];
+    // Stats row
+    ctx.font = '500 22px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    const statsText = type === 'villain_arc'
+        ? `${data.messageCount || 0} messages  |  ${data.frustrationScore || 'High'} frustration`
+        : `${data.messageCount || 0} messages  |  ${data.wordCount || 0} words`;
+    ctx.fillText(statsText, w / 2, h / 2 + 80);
+}
 
-    const gridStartY = 380;
-    const cellWidth = 400;
-    const cellHeight = 250;
-
-    stats.forEach((stat, i) => {
-        const row = Math.floor(i / 2);
-        const col = i % 2;
-        const x = 340 + col * cellWidth;
-        const y = gridStartY + row * cellHeight;
-
-        // Cell background
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-        ctx.beginPath();
-        ctx.roundRect(x - 180, y - 50, 360, 200, 20);
-        ctx.fill();
-
-        // Icon
-        ctx.font = '60px Inter, Arial, sans-serif';
-        ctx.fillText(stat.icon, x, y + 30);
-
-        // Value
-        ctx.fillStyle = '#00f0ff';
-        ctx.font = '700 52px Inter, Arial, sans-serif';
-        ctx.fillText(stat.value.toString(), x, y + 100);
-
-        // Label
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-        ctx.font = '400 24px Inter, Arial, sans-serif';
-        ctx.fillText(stat.label, x, y + 140);
-    });
-
-    // Streak if available
-    if (data.longestStreak) {
-        ctx.fillStyle = 'white';
-        ctx.font = '700 32px Inter, Arial, sans-serif';
-        ctx.fillText(`🔥 ${data.longestStreak} day streak!`, 540, 950);
+// Draw quote/prompt slide
+function drawQuoteSlide(ctx, data, type, w, h) {
+    // Big stat if FBI concern
+    if (type === 'fbi_concern' && data.bigStat) {
+        ctx.font = '800 80px Arial, sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(data.bigStat, w / 2, h / 2 - 60);
     }
+
+    // Quote box
+    const quote = data.promptSnippet || data.prompt || '';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.roundRect(w / 2 - 250, h / 2 + (type === 'fbi_concern' ? 0 : -80), 500, 120, 16);
+    ctx.fill();
+
+    ctx.font = '500 20px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    wrapText(ctx, quote, w / 2, h / 2 + (type === 'fbi_concern' ? 60 : -20), 460, 28);
 }
 
-// Badges Slide - Full graphics
+// Draw sentence slide
+function drawSentenceSlide(ctx, data, w, h) {
+    ctx.font = '500 28px Arial, sans-serif';
+    ctx.fillStyle = '#fff';
+    wrapText(ctx, data.sentence || '', w / 2, h / 2, w - 150, 40);
+}
+
+// Draw badges grid slide
 function drawBadgesSlide(ctx, data, w, h) {
-    const badges = data.badges?.filter(b => b.earned) || [];
+    const badges = (data.badges || []).slice(0, 6);
+    const cols = 3;
+    const startX = w / 2 - 180;
+    const startY = h / 2 - 100;
 
-    // Title
-    ctx.fillStyle = 'white';
-    ctx.font = '700 42px Inter, Arial, sans-serif';
-    ctx.fillText('🏆 Badges Earned', 540, 250);
-
-    // Count
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = '800 80px Inter, Arial, sans-serif';
-    ctx.fillText(badges.length.toString(), 540, 380);
-
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '400 32px Inter, Arial, sans-serif';
-    ctx.fillText('achievements unlocked', 540, 430);
-
-    // Badge grid
-    const displayBadges = badges.slice(0, 9);
-    const gridCols = 3;
-    const cellSize = 250;
-    const startX = 540 - cellSize;
-    const startY = 520;
-
-    displayBadges.forEach((badge, i) => {
-        const row = Math.floor(i / gridCols);
-        const col = i % gridCols;
-        const x = startX + col * cellSize;
-        const y = startY + row * 220;
+    badges.forEach((badge, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = startX + col * 130;
+        const y = startY + row * 140;
 
         // Badge background
-        const badgeColor = badge.color || '#8b00ff';
-        ctx.fillStyle = `${badgeColor}20`;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
         ctx.beginPath();
-        ctx.roundRect(x - 100, y - 40, 200, 180, 20);
+        ctx.roundRect(x - 45, y - 40, 100, 110, 12);
         ctx.fill();
-        ctx.strokeStyle = `${badgeColor}60`;
-        ctx.stroke();
 
-        // Icon
-        ctx.font = '60px Inter, Arial, sans-serif';
-        ctx.fillText(badge.icon, x, y + 40);
+        // Badge emoji
+        ctx.font = '48px Arial';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(badge.icon || '🏆', x + 5, y + 15);
 
-        // Name
-        ctx.fillStyle = 'white';
-        ctx.font = '500 22px Inter, Arial, sans-serif';
-        ctx.fillText(badge.name.substring(0, 15), x, y + 100);
+        // Badge name
+        ctx.font = '600 12px Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillText(badge.name || '', x + 5, y + 55);
     });
 }
 
-// Default slide
-function drawDefaultSlide(ctx, data, w, h) {
-    ctx.fillStyle = 'white';
-    ctx.font = '700 48px Inter, Arial, sans-serif';
-    ctx.fillText('My AI Wrapped 2025', 540, 500);
+// Draw quirky facts slide
+function drawFactsSlide(ctx, data, w, h) {
+    const facts = (data.facts || []).slice(0, 3);
+    const startY = h / 2 - (facts.length * 40);
 
-    ctx.fillStyle = '#00f0ff';
-    ctx.font = '900 120px Inter, Arial, sans-serif';
-    ctx.fillText(data.totalConversations || '847', 540, 700);
+    facts.forEach((fact, i) => {
+        const y = startY + i * 100;
 
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.beginPath();
+        ctx.roundRect(w / 2 - 230, y - 25, 460, 70, 12);
+        ctx.fill();
+
+        ctx.font = '500 18px Arial, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        wrapText(ctx, fact, w / 2, y + 10, 430, 24);
+    });
+}
+
+// Draw final wrap slide
+function drawFinalSlide(ctx, data, w, h) {
+    ctx.font = '800 64px Arial, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(data.title || "That's a Wrap!", w / 2, h / 2 - 20);
+
+    ctx.font = '500 28px Arial, sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillText(data.subtext || 'See you in 2026', w / 2, h / 2 + 40);
+
+    ctx.font = '600 24px Arial, sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '400 36px Inter, Arial, sans-serif';
-    ctx.fillText('conversations', 540, 770);
-}
-
-// Helper: Draw stats row at bottom
-function drawStatsRow(ctx, data, x, y) {
-    const stats = [
-        { value: data.activeDays || 180, label: 'days' },
-        { value: data.topicsExplored || 12, label: 'topics' },
-        { value: data.badges?.filter(b => b.earned)?.length || 5, label: 'badges' }
-    ];
-
-    ctx.font = '500 22px Inter, Arial, sans-serif';
-    const spacing = 180;
-    const startX = x - spacing;
-
-    stats.forEach((stat, i) => {
-        const sx = startX + i * spacing;
-        ctx.fillStyle = '#00f0ff';
-        ctx.font = '700 32px Inter, Arial, sans-serif';
-        ctx.fillText(stat.value.toString(), sx, y);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '400 20px Inter, Arial, sans-serif';
-        ctx.fillText(stat.label, sx, y + 28);
-    });
-}
-
-// Helper: Draw token visualization bars
-function drawTokenBars(ctx, tokens, x, y) {
-    const barCount = 7;
-    const barWidth = 60;
-    const maxHeight = 80;
-    const gap = 20;
-    const startX = x - (barCount * (barWidth + gap)) / 2;
-
-    for (let i = 0; i < barCount; i++) {
-        const height = maxHeight * (0.3 + Math.random() * 0.7);
-        const bx = startX + i * (barWidth + gap);
-
-        const gradient = ctx.createLinearGradient(0, y, 0, y - height);
-        gradient.addColorStop(0, '#00f0ff');
-        gradient.addColorStop(1, '#8b00ff');
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.roundRect(bx, y - height, barWidth, height, 8);
-        ctx.fill();
-    }
-}
-
-// Helper: Draw speed meter
-function drawSpeedMeter(ctx, avgTime, x, y) {
-    // Arc background
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 15;
-    ctx.beginPath();
-    ctx.arc(x, y, 100, Math.PI, 2 * Math.PI);
-    ctx.stroke();
-
-    // Speed indicator
-    const speed = Math.min(avgTime / 5, 1);
-    const gradient = ctx.createLinearGradient(x - 100, y, x + 100, y);
-    gradient.addColorStop(0, '#00ff88');
-    gradient.addColorStop(0.5, '#ffee00');
-    gradient.addColorStop(1, '#ff6b6b');
-    ctx.strokeStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, 100, Math.PI, Math.PI + (Math.PI * (1 - speed)));
-    ctx.stroke();
+    ctx.fillText('#GPTWrapped', w / 2, h / 2 + 100);
 }
 
 // Text wrap helper
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    if (!text) return;
     const words = text.split(' ');
     let line = '';
-    let testY = y;
+    let lines = [];
 
     for (let n = 0; n < words.length; n++) {
         const testLine = line + words[n] + ' ';
         const metrics = ctx.measureText(testLine);
         if (metrics.width > maxWidth && n > 0) {
-            ctx.fillText(line.trim(), x, testY);
+            lines.push(line);
             line = words[n] + ' ';
-            testY += lineHeight;
         } else {
             line = testLine;
         }
     }
-    ctx.fillText(line.trim(), x, testY);
-}
+    lines.push(line);
 
-// Format number helper
-function formatNumber(num) {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(0) + 'K';
-    return num.toString();
+    const startY = y - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach((line, i) => {
+        ctx.fillText(line.trim(), x, startY + i * lineHeight);
+    });
 }
 
 // Convert canvas to blob
@@ -595,26 +394,20 @@ export function canvasToBlob(canvas, type = 'image/png', quality = 0.95) {
 }
 
 // Download image
-export async function downloadImage(canvas, filename = 'ai-wrapped.png') {
+export async function downloadImage(canvas, filename = 'gpt-wrapped.png') {
     try {
         const blob = await canvasToBlob(canvas);
         const url = URL.createObjectURL(blob);
-
         const a = document.createElement('a');
         a.href = url;
         a.download = filename;
-        a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
-
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 100);
-
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
         return true;
-    } catch (error) {
-        console.error('Download error:', error);
+    } catch (err) {
+        console.error('Download failed:', err);
         return false;
     }
 }
@@ -623,132 +416,48 @@ export async function downloadImage(canvas, filename = 'ai-wrapped.png') {
 export async function shareToSocial(canvas, platform, shareText) {
     try {
         const blob = await canvasToBlob(canvas);
-        const file = new File([blob], 'ai-wrapped.png', { type: 'image/png' });
+        const file = new File([blob], 'gpt-wrapped.png', { type: 'image/png' });
 
-        // Try native share API (works on mobile)
+        // Try native share API first
         if (navigator.share && navigator.canShare) {
-            const shareData = {
-                title: 'My AI Wrapped 2025',
-                text: shareText,
-                files: [file]
-            };
-
+            const shareData = { title: 'GPT Wrapped 2025', text: shareText, files: [file] };
             if (navigator.canShare(shareData)) {
                 await navigator.share(shareData);
                 return { success: true, method: 'native' };
             }
         }
 
-        // Fallback: Download + open platform
-        await downloadImage(canvas, `ai-wrapped-${platform}.png`);
-
-        const urls = {
-            twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-            instagram: null,
-            linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`
-        };
-
-        if (urls[platform]) {
-            window.open(urls[platform], '_blank');
-        }
-
+        // Fallback: download and show message
+        await downloadImage(canvas, 'gpt-wrapped.png');
         return { success: true, method: 'download' };
-    } catch (error) {
-        console.error('Share error:', error);
-        await downloadImage(canvas, `ai-wrapped-${platform}.png`);
+    } catch (err) {
+        console.error('Share failed:', err);
+        // Still download as fallback
+        await downloadImage(canvas, 'gpt-wrapped.png');
         return { success: true, method: 'download-fallback' };
     }
 }
 
-// Create floating action buttons for any page
-export function createFloatingButtons(container, pageData, pageType) {
-    // Remove existing buttons if any
-    const existing = container.querySelector('.floating-actions');
-    if (existing) existing.remove();
-
-    const buttonsHtml = `
-    <div class="floating-actions">
-      <button class="fab fab-download" title="Download Image" aria-label="Download">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-      </button>
-      <button class="fab fab-share" title="Share" aria-label="Share">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="18" cy="5" r="3"/>
-          <circle cx="6" cy="12" r="3"/>
-          <circle cx="18" cy="19" r="3"/>
-          <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/>
-        </svg>
-      </button>
-    </div>
-  `;
-
-    container.insertAdjacentHTML('beforeend', buttonsHtml);
-
-    const shareText = `My 2025 AI Wrapped is here! 🤖✨\n\nGet yours at aiwrapped.com #AIWrapped2025`;
-
-    // Download button
-    container.querySelector('.fab-download')?.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const btn = e.currentTarget;
-        btn.classList.add('loading');
-
-        try {
-            const canvas = await generatePageImage(pageData, pageType);
-            await downloadImage(canvas, `ai-wrapped-${pageType}.png`);
-            btn.classList.remove('loading');
-            btn.classList.add('success');
-            setTimeout(() => btn.classList.remove('success'), 2000);
-        } catch (err) {
-            console.error('Capture failed:', err);
-            btn.classList.remove('loading');
-        }
-    });
-
-    // Share button
-    container.querySelector('.fab-share')?.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const btn = e.currentTarget;
-        btn.classList.add('loading');
-
-        try {
-            const canvas = await generatePageImage(pageData, pageType);
-            await shareToSocial(canvas, 'default', shareText);
-            btn.classList.remove('loading');
-            btn.classList.add('success');
-            setTimeout(() => btn.classList.remove('success'), 2000);
-        } catch (err) {
-            console.error('Share failed:', err);
-            btn.classList.remove('loading');
-        }
-    });
-}
-
-// Download a specific page as image
-export async function downloadPageImage(pageNum, data) {
+// Download a specific slide as image
+export async function downloadPageImage(slideNum, data) {
     try {
-        const pageTypes = ['year', 'prompts', 'conversations', 'topics', 'curiosity', 'promptLength', 'words', 'activeDay', 'peakHour', 'dayNight', 'carried', 'delulu', 'longestConvo', 'villainArc', 'fbiConcern', 'touchGrass', 'model', 'summary', 'rizzless', 'badges', 'quirky', 'final'];
-        const pageType = pageTypes[pageNum - 1] || 'default';
-        const canvas = await generatePageImage(data, pageType);
-        await downloadImage(canvas, `gpt-wrapped-slide-${pageNum}.png`);
+        const slideIndex = slideNum - 1;
+        const slide = SLIDES[slideIndex];
+        const canvas = await generatePageImage(data, slide?.type || 'default', slideIndex);
+        await downloadImage(canvas, `gpt-wrapped-slide-${slideNum}.png`);
         return true;
     } catch (err) {
-        console.error('Download page failed:', err);
+        console.error('Download slide failed:', err);
         return false;
     }
 }
 
-// Share a specific page
-export async function sharePageImage(pageNum, data) {
+// Share a specific slide
+export async function sharePageImage(slideNum, data) {
     try {
-        const pageTypes = ['year', 'prompts', 'conversations', 'topics', 'curiosity', 'promptLength', 'words', 'activeDay', 'peakHour', 'dayNight', 'carried', 'delulu', 'longestConvo', 'villainArc', 'fbiConcern', 'touchGrass', 'model', 'summary', 'rizzless', 'badges', 'quirky', 'final'];
-        const pageType = pageTypes[pageNum - 1] || 'default';
-        const canvas = await generatePageImage(data, pageType);
+        const slideIndex = slideNum - 1;
+        const slide = SLIDES[slideIndex];
+        const canvas = await generatePageImage(data, slide?.type || 'default', slideIndex);
 
         const shareText = `My GPT Wrapped 2025 🤖✨
 Get yours at gptwrapped.app #GPTWrapped2025`;
@@ -756,7 +465,13 @@ Get yours at gptwrapped.app #GPTWrapped2025`;
         await shareToSocial(canvas, 'default', shareText);
         return true;
     } catch (err) {
-        console.error('Share page failed:', err);
+        console.error('Share slide failed:', err);
         return false;
     }
+}
+
+// Legacy function for backwards compatibility
+export function createFloatingButtons(container, pageData, pageType) {
+    // This is now handled by the per-slide buttons
+    console.log('createFloatingButtons is deprecated - use per-slide buttons instead');
 }
