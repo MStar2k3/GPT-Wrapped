@@ -85,6 +85,7 @@ export function renderSlide(slideConfig, userData) {
         case 'touch_grass':
         case 'carried_score':
         case 'most_used_model':
+        case 'relationship':
             contentHTML = `
                 <div class="slide-emoji">${emoji}</div>
                 <div class="slide-label">${slideConfig.label}</div>
@@ -230,9 +231,12 @@ export function renderSlide(slideConfig, userData) {
             `;
     }
 
-    // Add caption pill at bottom
-    const captionHTML = slideConfig.caption ? `
-        <div class="slide-caption-pill">${slideConfig.caption}</div>
+    // Add caption pill at bottom - handle both static and dynamic captions
+    const captionValue = typeof slideConfig.caption === 'function'
+        ? slideConfig.caption(userData)
+        : slideConfig.caption;
+    const captionHTML = captionValue ? `
+        <div class="slide-caption-pill">${captionValue}</div>
     ` : '';
 
     // Generate floating orbs HTML with varying positions and sizes

@@ -224,6 +224,64 @@ export const SLIDES = [
     },
     {
         id: 16,
+        type: 'relationship',
+        label: 'YOUR RELATIONSHIP WITH CHATGPT',
+        emoji: (data) => {
+            const score = data?.personality?.relationshipScore || 45;
+            if (score <= 20) return '👋';
+            if (score <= 35) return '💭';
+            if (score <= 50) return '💑';
+            if (score <= 65) return '👯';
+            if (score <= 80) return '🔗';
+            if (score <= 90) return '🚀';
+            return '🫂';
+        },
+        gradient: 'linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%)',
+        caption: (data) => {
+            const score = data?.personality?.relationshipScore || 45;
+            if (score <= 10) return "Who even is ChatGPT?";
+            if (score <= 20) return "Casual, nothing serious.";
+            if (score <= 35) return "We text sometimes, no cap.";
+            if (score <= 50) return "Husband/Wife material vibes.";
+            if (score <= 65) return "Can't function without them tbh.";
+            if (score <= 80) return "Literally glued at the hip, bestie.";
+            if (score <= 90) return "Touch grass, we're begging you.";
+            return "This is a cry for help and we support you.";
+        },
+        getData: (data) => {
+            // Calculate relationship score from user data
+            const totalPrompts = data?.summary?.totalPrompts || 500;
+            const conversationCount = data?.summary?.totalConversations || 100;
+            const activeDays = data?.summary?.activeDays || 150;
+
+            // Score formula: weighted combination capped at 100
+            const rawScore = Math.min(100, Math.round(
+                (Math.min(totalPrompts / 100, 30)) +
+                (Math.min(conversationCount / 10, 40)) +
+                (Math.min(activeDays / 10, 30))
+            ));
+
+            const score = data?.personality?.relationshipScore || rawScore;
+
+            // Get relationship status based on score
+            let status = '';
+            if (score <= 10) status = "It's complicated 🤷";
+            else if (score <= 20) status = "Just acquaintances 👋";
+            else if (score <= 35) status = "Dating (casually) 💭";
+            else if (score <= 50) status = "In a committed relationship 💑";
+            else if (score <= 65) status = "Inseparable besties 👯";
+            else if (score <= 80) status = "Kaleshi Person energy 🔗";
+            else if (score <= 90) status = "Parasocial relationship unlocked 🚀";
+            else status = "It's a lifestyle 🫂";
+
+            return {
+                bigStat: score + '%',
+                subtext: status
+            };
+        }
+    },
+    {
+        id: 17,
         type: 'touch_grass',
         label: 'TOUCH GRASS AWARD',
         emoji: '🌱',
@@ -235,7 +293,7 @@ export const SLIDES = [
         })
     },
     {
-        id: 17,
+        id: 18,
         type: 'most_used_model',
         label: 'MOST USED MODEL',
         emoji: '🤖',
@@ -247,7 +305,7 @@ export const SLIDES = [
         })
     },
     {
-        id: 18,
+        id: 19,
         type: 'summary_sentence',
         label: 'YOUR YEAR IN ONE SENTENCE',
         emoji: '✍️',
@@ -258,51 +316,7 @@ export const SLIDES = [
         })
     },
     {
-        id: 19,
-        type: 'rizzless_prompt',
-        label: 'RIZZLESS PROMPT OF THE YEAR',
-        emoji: '😬',
-        gradient: GRADIENTS.coral,
-        caption: 'Not your finest moment, bestie.',
-        getData: (data) => ({
-            prompt: data?.highlights?.rizzlessPrompt || '"In the Retail Policy Issuance – STP process..."'
-        })
-    },
-    {
         id: 20,
-        type: 'badges',
-        label: 'BADGES EARNED',
-        emoji: '🏆',
-        gradient: GRADIENTS.gold,
-        caption: 'Achievement unlocked: AI Power User',
-        getData: (data) => ({
-            badges: data?.badges || [
-                { icon: '👑', name: 'Token Titan' },
-                { icon: '🌊', name: 'Word Tsunami' },
-                { icon: '🎯', name: 'Prompt Prodigy' },
-                { icon: '🦉', name: '3 AM Thinker' },
-                { icon: '🔥', name: 'Streak Master' },
-                { icon: '👺', name: 'Code Goblin' }
-            ]
-        })
-    },
-    {
-        id: 21,
-        type: 'quirky_facts',
-        label: 'FUN FACTS',
-        emoji: '🎲',
-        gradient: GRADIENTS.violet,
-        caption: 'The numbers don\'t lie.',
-        getData: (data) => ({
-            facts: data?.quirkyFacts || [
-                'You said "please" 47 times. Manners maketh the human! 🥹',
-                'Your longest conversation was 47 messages. That\'s a journey! 🎢',
-                'You had 23 late-night sessions. Night owl energy! 🦉'
-            ]
-        })
-    },
-    {
-        id: 22,
         type: 'final_wrap',
         label: '',
         emoji: '✨',
