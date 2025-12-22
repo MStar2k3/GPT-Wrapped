@@ -18,6 +18,7 @@ dotenv.config();
 import authRoutes from './routes/auth.js';
 import generateRoutes from './routes/generate.js';
 import shareRoutes from './routes/share.js';
+import emailRoutes from './routes/emails.js';
 // Screenshot routes loaded dynamically due to Puppeteer dependency
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -106,6 +107,7 @@ passport.deserializeUser((id, done) => {
 app.use('/auth', authRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/share', shareRoutes);
+app.use('/api/emails', emailRoutes);
 
 // Screenshot routes - loaded dynamically (Puppeteer may not work in all environments)
 (async () => {

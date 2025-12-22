@@ -308,10 +308,15 @@ export const SLIDES = [
         emoji: '✨',
         gradient: GRADIENTS.purple,
         caption: '#GPTWrapped',
-        getData: () => ({
-            title: "That's a Wrap!",
-            subtext: 'See you in 2026'
-        })
+        getData: () => {
+            const nextYear = new Date().getFullYear() + 1;
+            return {
+                title: "That's a Wrap!",
+                mainMessage: "Your AI year is wrapped, but our services? They're never on pause. Download our brochure to see what else we can help you with. 📊",
+                subtext: `See you in ${nextYear}`,
+                hashtag: '#GPTWrapped'
+            };
+        }
     }
 ];
 

@@ -216,8 +216,9 @@ export function renderSlide(slideConfig, userData) {
             contentHTML = `
                 <div class="slide-emoji">${emoji}</div>
                 <div class="slide-final-title">${data.title}</div>
+                <div class="slide-main-message">${data.mainMessage || "Your AI year is wrapped, but our services? They're never on pause. Download our brochure to see what else we can help you with. 📊"}</div>
                 <div class="slide-subtext">${data.subtext}</div>
-                <div class="slide-hashtag">#GPTWrapped</div>
+                <div class="slide-hashtag">${data.hashtag || '#GPTWrapped'}</div>
             `;
             break;
 
@@ -234,31 +235,24 @@ export function renderSlide(slideConfig, userData) {
         <div class="slide-caption-pill">${slideConfig.caption}</div>
     ` : '';
 
-    // Add download/share buttons
-    const buttonsHTML = `
-        <div class="slide-action-buttons">
-            <button class="slide-action-btn slide-download-btn" data-slide="${slideConfig.id}" aria-label="Download">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-            </button>
-            <button class="slide-action-btn slide-share-btn" data-slide="${slideConfig.id}" aria-label="Share">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                    <polyline points="16 6 12 2 8 6"/>
-                    <line x1="12" y1="2" x2="12" y2="15"/>
-                </svg>
-            </button>
-        </div>
-    `;
-
     // Generate floating orbs HTML with varying positions and sizes
     const orbsHTML = `
         <div class="slide-orb orb-1"></div>
         <div class="slide-orb orb-2"></div>
         <div class="slide-orb orb-3"></div>
+    `;
+
+    // Logo watermark button (larger on final slide, regular on other slides)
+    const isFinalSlide = slideConfig.type === 'final_wrap';
+    const logoHTML = `
+        <a href="https://docs.google.com/presentation/d/1YXH7nCAW-mEEPOjTBDTIb70qVXpU4LtS3xzr_U5yC_E/edit?usp=sharing" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="logo-watermark ${isFinalSlide ? 'logo-watermark-large' : ''}"
+           title="${isFinalSlide ? 'Learn more about our services' : ''}">
+            <img src="/logo-watermark.png" alt="Company Logo" />
+            ${isFinalSlide ? '<span class="logo-tooltip">Our services</span>' : ''}
+        </a>
     `;
 
     container.innerHTML = `
@@ -267,7 +261,7 @@ export function renderSlide(slideConfig, userData) {
             ${contentHTML}
         </div>
         ${captionHTML}
-        ${buttonsHTML}
+        ${logoHTML}
     `;
 
     // Trigger counting animations after a short delay
