@@ -254,7 +254,15 @@ export function renderSlide(slideConfig, userData) {
         </div>
     `;
 
+    // Generate floating orbs HTML with varying positions and sizes
+    const orbsHTML = `
+        <div class="slide-orb orb-1"></div>
+        <div class="slide-orb orb-2"></div>
+        <div class="slide-orb orb-3"></div>
+    `;
+
     container.innerHTML = `
+        ${orbsHTML}
         <div class="slide-content">
             ${contentHTML}
         </div>

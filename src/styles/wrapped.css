@@ -2455,6 +2455,102 @@
     overflow: hidden;
 }
 
+/* ============================================
+   FLOATING BACKGROUND ORBS
+   ============================================ */
+.slide-orb {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform, opacity;
+}
+
+.orb-1 {
+    width: 130px;
+    height: 130px;
+    top: -30px;
+    right: -30px;
+    opacity: 0.18;
+    animation: floatOrb1 15s ease-in-out infinite;
+}
+
+.orb-2 {
+    width: 90px;
+    height: 90px;
+    bottom: 15%;
+    left: -25px;
+    opacity: 0.15;
+    animation: floatOrb2 18s ease-in-out infinite;
+}
+
+.orb-3 {
+    width: 60px;
+    height: 60px;
+    top: 45%;
+    right: -15px;
+    opacity: 0.20;
+    animation: floatOrb3 12s ease-in-out infinite;
+}
+
+@keyframes floatOrb1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.18;
+    }
+
+    25% {
+        transform: translate(-6px, 8px);
+        opacity: 0.22;
+    }
+
+    50% {
+        transform: translate(-4px, 5px);
+        opacity: 0.16;
+    }
+
+    75% {
+        transform: translate(5px, -3px);
+        opacity: 0.20;
+    }
+}
+
+@keyframes floatOrb2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+        opacity: 0.15;
+    }
+
+    33% {
+        transform: translate(8px, -5px);
+        opacity: 0.20;
+    }
+
+    66% {
+        transform: translate(3px, 7px);
+        opacity: 0.17;
+    }
+}
+
+@keyframes floatOrb3 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 0.20;
+    }
+
+    50% {
+        transform: translate(-5px, -6px) scale(1.03);
+        opacity: 0.24;
+    }
+}
+
 .slide-content {
     display: flex;
     flex-direction: column;
