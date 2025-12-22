@@ -1,29 +1,9 @@
 /* ============================================
    AI CHATBOT WRAPPED - PAGE 8: SHARE
-   Multi-platform screenshot & direct posting
+   Client-side canvas-based downloads & sharing
    ============================================ */
 
 import { createConfetti } from '../../utils/animations.js';
-import { API_BASE } from '../../utils/config.js';
-
-// Platform format configurations
-const PLATFORM_FORMATS = {
-  linkedin: { name: 'LinkedIn', dimensions: '1080×1350', icon: '💼' },
-  instagram_square: { name: 'Instagram (Square)', dimensions: '1080×1080', icon: '📷' },
-  instagram_story: { name: 'Instagram (Story)', dimensions: '1080×1920', icon: '📱' },
-  twitter: { name: 'Twitter/X', dimensions: '1200×675', icon: '🐦' },
-  highres: { name: 'High Resolution', dimensions: '2160×2700', icon: '🖼️' }
-};
-
-// Card types available for download/share
-const CARD_TYPES = [
-  { id: 'year', name: 'Your AI Year', icon: '✨' },
-  { id: 'personality', name: 'AI Personality', icon: '🧪' },
-  { id: 'topic', name: 'Top Topic', icon: '💻' },
-  { id: 'stats', name: 'Your Stats', icon: '📊' },
-  { id: 'speed', name: 'Speed Stats', icon: '⚡' },
-  { id: 'achievement', name: 'Achievements', icon: '🏆' }
-];
 
 export function renderPage8(data) {
   const container = document.createElement('div');
@@ -32,6 +12,7 @@ export function renderPage8(data) {
   const summary = data.summary;
   const personality = data.personality;
   const earnedBadges = data.badges.filter(b => b.earned);
+  const topTopic = data.topTopic;
 
   container.innerHTML = `
     <div class="wrapped-content share-page">
@@ -41,39 +22,7 @@ export function renderPage8(data) {
         Share Your <span class="text-gradient">Story</span>
       </h2>
       
-      <!-- Card Selector -->
-      <div class="card-selector animate-on-enter">
-        <h4 class="selector-title">🎴 Select Cards to Share</h4>
-        <div class="card-options">
-          ${CARD_TYPES.map((card, i) => `
-            <label class="card-option" data-card="${card.id}">
-              <input type="checkbox" name="card" value="${card.id}" ${i === 0 ? 'checked' : ''}>
-              <span class="card-icon">${card.icon}</span>
-              <span class="card-name">${card.name}</span>
-            </label>
-          `).join('')}
-        </div>
-        <button class="btn btn-ghost btn-sm" id="select-all-cards" style="margin-top: 8px;">
-          Select All
-        </button>
-      </div>
-      
-      <!-- Platform Format Selector -->
-      <div class="platform-selector animate-on-enter">
-        <h4 class="selector-title">📱 Choose Format</h4>
-        <div class="platform-options">
-          ${Object.entries(PLATFORM_FORMATS).map(([id, fmt]) => `
-            <label class="platform-option" data-platform="${id}">
-              <input type="radio" name="platform" value="${id}" ${id === 'instagram_square' ? 'checked' : ''}>
-              <span class="platform-icon">${fmt.icon}</span>
-              <span class="platform-name">${fmt.name}</span>
-              <span class="platform-dims">${fmt.dimensions}</span>
-            </label>
-          `).join('')}
-        </div>
-      </div>
-      
-      <!-- Preview Card -->
+      <!-- Preview Card (this will be rendered to canvas) -->
       <div class="share-card-wrapper animate-on-enter">
         <div class="share-card" id="share-card">
           <div class="share-card-bg"></div>
@@ -99,46 +48,37 @@ export function renderPage8(data) {
         </div>
       </div>
       
-      <!-- Progress Indicator -->
-      <div class="download-progress hidden" id="download-progress">
-        <div class="progress-bar">
-          <div class="progress-fill" id="progress-fill"></div>
-        </div>
-        <p class="progress-text" id="progress-text">Generating...</p>
-      </div>
+      <!-- Hidden canvas for rendering -->
+      <canvas id="download-canvas" style="display: none;"></canvas>
       
       <!-- Download Actions -->
       <div class="download-actions animate-on-enter">
-        <button class="btn btn-primary btn-lg" id="download-selected">
+        <button class="btn btn-primary btn-lg" id="download-png">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          <span id="download-btn-text">Download Selected</span>
-        </button>
-        
-        <button class="btn btn-secondary" id="download-all-zip">
-          📦 Download All Formats (ZIP)
+          <span>Download Image</span>
         </button>
       </div>
       
-      <!-- Direct Share Actions -->
+      <!-- Share Actions -->
       <div class="share-actions animate-on-enter">
         <h4 class="selector-title">📤 Share Directly</h4>
         <div class="share-buttons">
-          <button class="btn btn-social btn-linkedin" id="share-linkedin">
-            💼 Post to LinkedIn
-          </button>
           <button class="btn btn-social btn-instagram" id="share-instagram">
-            📷 Share to Instagram
+            📷 Instagram
           </button>
           <button class="btn btn-social btn-twitter" id="share-twitter">
-            🐦 Tweet
+            🐦 Twitter/X
+          </button>
+          <button class="btn btn-social btn-linkedin" id="share-linkedin">
+            💼 LinkedIn
           </button>
         </div>
-        <p class="share-note" style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 8px;">
-          📱 On mobile, these will open your native share sheet
+        <p class="share-note" style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 8px; text-align: center;">
+          📱 On mobile, these will open your share sheet
         </p>
       </div>
       
@@ -161,469 +101,253 @@ export function renderPage8(data) {
   return container;
 }
 
-function setupShareListeners(container, data) {
-  createConfetti(container, 30);
+// Generate image using Canvas API (works entirely client-side)
+async function generateShareImage(data, width = 1080, height = 1080) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
 
-  const summary = data.summary;
-  const personality = data.personality;
-  const topTopic = data.topTopic;
-  const earnedBadges = data.badges.filter(b => b.earned);
+  // Background gradient
+  const bgGradient = ctx.createLinearGradient(0, 0, width, height);
+  bgGradient.addColorStop(0, '#0a0a1a');
+  bgGradient.addColorStop(0.3, '#1a1a2e');
+  bgGradient.addColorStop(0.6, '#16213e');
+  bgGradient.addColorStop(1, '#0f0f23');
+  ctx.fillStyle = bgGradient;
+  ctx.fillRect(0, 0, width, height);
 
-  // Get selections
-  function getSelectedCards() {
-    return [...container.querySelectorAll('input[name="card"]:checked')].map(el => el.value);
+  // Draw stars
+  for (let i = 0; i < 50; i++) {
+    const x = Math.random() * width;
+    const y = Math.random() * height;
+    const opacity = Math.random() * 0.6 + 0.2;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+    ctx.fill();
   }
 
-  function getSelectedPlatform() {
-    return container.querySelector('input[name="platform"]:checked')?.value || 'instagram_square';
+  // Glow orbs
+  const drawGlowOrb = (x, y, radius, color) => {
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    gradient.addColorStop(0, color.replace(')', ', 0.15)').replace('rgb', 'rgba'));
+    gradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  drawGlowOrb(width * 0.1, height * 0.1, width * 0.4, 'rgb(0, 240, 255)');
+  drawGlowOrb(width * 0.9, height * 0.9, width * 0.35, 'rgb(139, 0, 255)');
+
+  // Card background
+  const cardX = width * 0.1;
+  const cardY = height * 0.15;
+  const cardW = width * 0.8;
+  const cardH = height * 0.7;
+  const cardRadius = 30;
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.beginPath();
+  ctx.roundRect(cardX, cardY, cardW, cardH, cardRadius);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Logo
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.font = `${width * 0.03}px Inter, Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('✨ AI Wrapped 2025', width / 2, cardY + height * 0.08);
+
+  // Main stat - conversations
+  const conversations = data.summary?.totalConversations || 847;
+  ctx.fillStyle = '#00f0ff';
+  ctx.font = `bold ${width * 0.14}px Inter, Arial, sans-serif`;
+  ctx.fillText(conversations.toString(), width / 2, cardY + height * 0.28);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.font = `${width * 0.035}px Inter, Arial, sans-serif`;
+  ctx.fillText('conversations', width / 2, cardY + height * 0.34);
+
+  // Personality
+  const personality = data.personality || { icon: '🧪', type: 'The Explorer' };
+  ctx.font = `${width * 0.08}px Inter, Arial, sans-serif`;
+  ctx.fillText(personality.icon, width / 2, cardY + height * 0.45);
+
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${width * 0.05}px Inter, Arial, sans-serif`;
+  ctx.fillText(personality.type, width / 2, cardY + height * 0.54);
+
+  // Badges
+  const earnedBadges = data.badges?.filter(b => b.earned) || [];
+  const badgeEmojis = earnedBadges.slice(0, 4).map(b => b.icon);
+  if (badgeEmojis.length > 0) {
+    ctx.font = `${width * 0.05}px Inter, Arial, sans-serif`;
+    ctx.fillText(badgeEmojis.join(' '), width / 2, cardY + height * 0.62);
   }
 
-  // Select all cards
-  container.querySelector('#select-all-cards')?.addEventListener('click', () => {
-    const checkboxes = container.querySelectorAll('input[name="card"]');
-    const allChecked = [...checkboxes].every(cb => cb.checked);
-    checkboxes.forEach(cb => { cb.checked = !allChecked; });
-    container.querySelector('#select-all-cards').textContent = allChecked ? 'Select All' : 'Deselect All';
-  });
+  // Watermark
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.font = `${width * 0.025}px Inter, Arial, sans-serif`;
+  ctx.fillText('✨ aiwrapped.com', width / 2, height * 0.95);
 
-  // Prepare card data for API
-  function getCardData(cardType) {
-    switch (cardType) {
-      case 'year':
-        return {
-          icon: '✨',
-          totalConversations: summary.totalConversations,
-          topicsExplored: summary.uniqueTopics,
-          platforms: 1,
-          badges: earnedBadges.slice(0, 4).map(b => b.icon)
-        };
-      case 'personality':
-        return {
-          icon: personality.icon,
-          type: personality.type,
-          description: personality.description,
-          traits: personality.traits
-        };
-      case 'topic':
-        return {
-          icon: topTopic?.icon || '💻',
-          name: topTopic?.name || 'CODING',
-          conversations: topTopic?.conversations || 0,
-          percentage: topTopic?.percentage || 0,
-          insight: topTopic?.insight || ''
-        };
-      case 'stats':
-        return {
-          icon: '📊',
-          totalConversations: summary.totalConversations,
-          topicsExplored: summary.uniqueTopics,
-          platforms: 1,
-          badges: earnedBadges.slice(0, 4).map(b => b.icon)
-        };
-      case 'speed':
-        return { avgResponseTime: summary.avgResponseTime || 2.5, fastestPlatform: 'ChatGPT' };
-      case 'achievement':
-        return { count: earnedBadges.length, badges: earnedBadges.slice(0, 5) };
-      default:
-        return { value: summary.totalConversations, label: 'conversations' };
-    }
-  }
+  return canvas;
+}
 
-  // Progress helpers
-  function showProgress(show, text = 'Generating...') {
-    const el = container.querySelector('#download-progress');
-    el.classList.toggle('hidden', !show);
-    container.querySelector('#progress-text').textContent = text;
-  }
-
-  function updateProgress(pct, text) {
-    container.querySelector('#progress-fill').style.width = `${pct}%`;
-    if (text) container.querySelector('#progress-text').textContent = text;
-  }
-
-  // Generate screenshots and get files
-  async function generateScreenshots(cards, platform) {
-    const results = [];
-    let completed = 0;
-
-    for (const cardType of cards) {
-      const response = await fetch(`${API_BASE}/api/screenshots/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cardType, platform, data: getCardData(cardType) })
-      });
-      const result = await response.json();
-      if (result.success) {
-        results.push({ ...result, cardType, platform });
-      }
-      completed++;
-      updateProgress((completed / cards.length) * 80, `Generated ${completed}/${cards.length}...`);
-    }
-    return results;
-  }
-
-  // Fetch image as blob
-  async function fetchImageBlob(url) {
-    const response = await fetch(url);
-    return await response.blob();
-  }
-
-  // Download Selected
-  container.querySelector('#download-selected')?.addEventListener('click', async () => {
-    const btn = container.querySelector('#download-selected');
-    const btnText = container.querySelector('#download-btn-text');
-    const cards = getSelectedCards();
-    const platform = getSelectedPlatform();
-
-    if (cards.length === 0) {
-      alert('Please select at least one card.');
-      return;
-    }
-
-    btn.disabled = true;
-    btnText.textContent = 'Generating...';
-    showProgress(true, 'Generating screenshots...');
-
-    try {
-      const results = await generateScreenshots(cards, platform);
-
-      if (results.length > 1) {
-        updateProgress(90, 'Creating ZIP...');
-        const zipResponse = await fetch(`${API_BASE}/api/screenshots/zip`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ files: results.map(r => ({ filename: r.filename, platform: r.platform })) })
-        });
-        const zipResult = await zipResponse.json();
-        if (zipResult.success) {
-          window.open(`${API_BASE}${zipResult.url}`, '_blank');
-        }
-      } else if (results.length === 1) {
-        window.open(`${API_BASE}${results[0].url}`, '_blank');
-      }
-
-      updateProgress(100, 'Done!');
-      btnText.textContent = '✅ Downloaded!';
-    } catch (error) {
-      console.error('Download error:', error);
-      btnText.textContent = '❌ Error';
-    }
-
-    setTimeout(() => { btnText.textContent = 'Download Selected'; showProgress(false); btn.disabled = false; }, 2000);
-  });
-
-  // Download All Formats ZIP
-  container.querySelector('#download-all-zip')?.addEventListener('click', async () => {
-    const btn = container.querySelector('#download-all-zip');
-    const cards = getSelectedCards();
-
-    if (cards.length === 0) {
-      alert('Please select at least one card.');
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '📦 Generating...';
-    showProgress(true, 'Generating all formats...');
-
-    try {
-      const allPlatforms = Object.keys(PLATFORM_FORMATS);
-      const cardsData = cards.map(cardType => ({ type: cardType, data: getCardData(cardType) }));
-
-      const response = await fetch(`${API_BASE}/api/screenshots/batch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cards: cardsData, platforms: allPlatforms })
-      });
-
-      updateProgress(70, 'Creating ZIP...');
-      const result = await response.json();
-
-      if (result.success) {
-        const files = result.results.filter(r => !r.error).map(r => ({ filename: r.filename, platform: r.platform }));
-        const zipResponse = await fetch(`${API_BASE}/api/screenshots/zip`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ files })
-        });
-        const zipResult = await zipResponse.json();
-        if (zipResult.success) {
-          updateProgress(100, 'Done!');
-          window.open(`${API_BASE}${zipResult.url}`, '_blank');
-        }
-      }
-
-      btn.textContent = '✅ Downloaded!';
-    } catch (error) {
-      console.error('Batch download error:', error);
-      btn.textContent = '❌ Error';
-    }
-
-    setTimeout(() => { btn.textContent = '📦 Download All Formats (ZIP)'; showProgress(false); btn.disabled = false; }, 2000);
-  });
-
-  // Share to LinkedIn
-  container.querySelector('#share-linkedin')?.addEventListener('click', async () => {
-    const btn = container.querySelector('#share-linkedin');
-    const cards = getSelectedCards();
-
-    if (cards.length === 0) {
-      alert('Please select at least one card to share.');
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '⏳ Generating...';
-    showProgress(true, 'Generating images for LinkedIn...');
-
-    try {
-      // Generate images for LinkedIn format
-      const results = await generateScreenshots(cards, 'linkedin');
-
-      if (results.length === 0) {
-        throw new Error('No images generated');
-      }
-
-      // Try Web Share API first (mobile)
-      if (navigator.share && navigator.canShare) {
-        const files = [];
-        for (const result of results) {
-          const blob = await fetchImageBlob(`${API_BASE}${result.url}`);
-          const file = new File([blob], `ai-wrapped-${result.cardType}.png`, { type: 'image/png' });
-          files.push(file);
-        }
-
-        const shareData = {
-          title: 'My AI Wrapped 2025',
-          text: `Just got my AI Wrapped for 2025! 🤖✨ ${summary.totalConversations} conversations. My AI personality: "${personality.type}". Get yours at aiwrapped.com #AIWrapped2025`,
-          files
-        };
-
-        if (navigator.canShare(shareData)) {
-          updateProgress(100, 'Opening share sheet...');
-          await navigator.share(shareData);
-          btn.textContent = '✅ Shared!';
-          showProgress(false);
-          setTimeout(() => { btn.textContent = '💼 Post to LinkedIn'; btn.disabled = false; }, 2000);
-          return;
-        }
-      }
-
-      // Desktop fallback: Check if LinkedIn OAuth is available
-      const statusResponse = await fetch(`${API_BASE}/api/share/linkedin/status`);
-      const status = await statusResponse.json();
-
-      if (status.configured) {
-        // Download images first, then open LinkedIn OAuth
-        for (const result of results) {
-          const link = document.createElement('a');
-          link.href = `${API_BASE}${result.url}`;
-          link.download = `ai-wrapped-linkedin-${result.cardType}.png`;
-          link.click();
-        }
-
-        updateProgress(100, 'Images downloaded!');
-
-        // Open LinkedIn with text
-        const text = `Just got my AI Wrapped for 2025! 🤖✨\n\n📊 ${summary.totalConversations} conversations\n🧪 My AI personality: "${personality.type}"\n\nGet yours at aiwrapped.com\n\n#AIWrapped2025 #AI #ChatGPT`;
-
-        // Open LinkedIn post composer
-        window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`, '_blank');
-
-        btn.textContent = '✅ Images Ready!';
-        alert('Images downloaded! Upload them to your LinkedIn post that just opened.');
-      } else {
-        // No OAuth, just download and show instructions
-        for (const result of results) {
-          const link = document.createElement('a');
-          link.href = `${API_BASE}${result.url}`;
-          link.download = `ai-wrapped-linkedin-${result.cardType}.png`;
-          link.click();
-        }
-
-        const text = `Just got my AI Wrapped for 2025! 🤖✨ ${summary.totalConversations} conversations. My AI personality: "${personality.type}". Get yours at aiwrapped.com`;
-        window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`, '_blank');
-
-        btn.textContent = '✅ Downloaded!';
-        alert('Images downloaded! Upload them to the LinkedIn post that just opened.');
-      }
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('LinkedIn share error:', error);
-        btn.textContent = '❌ Error';
-      }
-    }
-
-    showProgress(false);
-    setTimeout(() => { btn.textContent = '💼 Post to LinkedIn'; btn.disabled = false; }, 2000);
-  });
-
-  // Share to Instagram
-  container.querySelector('#share-instagram')?.addEventListener('click', async () => {
-    const btn = container.querySelector('#share-instagram');
-    const cards = getSelectedCards();
-
-    if (cards.length === 0) {
-      alert('Please select at least one card to share.');
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '⏳ Generating...';
-    showProgress(true, 'Generating images for Instagram...');
-
-    try {
-      // Generate images for Instagram format
-      const platform = cards.length === 1 ? 'instagram_story' : 'instagram_square';
-      const results = await generateScreenshots(cards, platform);
-
-      if (results.length === 0) {
-        throw new Error('No images generated');
-      }
-
-      // Try Web Share API (mobile - works great for Instagram!)
-      if (navigator.share && navigator.canShare) {
-        const files = [];
-        for (const result of results) {
-          const blob = await fetchImageBlob(`${API_BASE}${result.url}`);
-          const ext = result.format === 'jpeg' ? 'jpg' : 'png';
-          const file = new File([blob], `ai-wrapped-${result.cardType}.${ext}`, { type: `image/${result.format || 'png'}` });
-          files.push(file);
-        }
-
-        const shareData = {
-          title: 'My AI Wrapped 2025',
-          text: 'Check out my AI Wrapped 2025! 🤖✨ #AIWrapped2025 #ChatGPT',
-          files
-        };
-
-        if (navigator.canShare(shareData)) {
-          updateProgress(100, 'Opening share sheet...');
-          await navigator.share(shareData);
-          btn.textContent = '✅ Shared!';
-          showProgress(false);
-          setTimeout(() => { btn.textContent = '📷 Share to Instagram'; btn.disabled = false; }, 2000);
-          return;
-        }
-      }
-
-      // Desktop fallback: Download images
-      for (const result of results) {
-        const link = document.createElement('a');
-        link.href = `${API_BASE}${result.url}`;
-        link.download = `ai-wrapped-instagram-${result.cardType}.${result.format === 'jpeg' ? 'jpg' : 'png'}`;
-        link.click();
-      }
-
-      updateProgress(100, 'Downloaded!');
-      btn.textContent = '✅ Downloaded!';
-
-      // Show instructions
-      showInstagramModal(container, results.length);
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('Instagram share error:', error);
-        btn.textContent = '❌ Error';
-      }
-    }
-
-    showProgress(false);
-    setTimeout(() => { btn.textContent = '📷 Share to Instagram'; btn.disabled = false; }, 2000);
-  });
-
-  // Share to Twitter
-  container.querySelector('#share-twitter')?.addEventListener('click', async () => {
-    const btn = container.querySelector('#share-twitter');
-    const cards = getSelectedCards();
-
-    btn.disabled = true;
-    btn.textContent = '⏳ Generating...';
-
-    try {
-      // Generate image for Twitter if cards selected
-      if (cards.length > 0) {
-        showProgress(true, 'Generating image...');
-        const results = await generateScreenshots([cards[0]], 'twitter');
-
-        if (results.length > 0 && navigator.share && navigator.canShare) {
-          const blob = await fetchImageBlob(`${API_BASE}${results[0].url}`);
-          const file = new File([blob], 'ai-wrapped-twitter.jpg', { type: 'image/jpeg' });
-
-          const shareData = {
-            title: 'My AI Wrapped 2025',
-            text: `My 2025 AI Wrapped is here! 🤖✨\n\n${summary.totalConversations} conversations\n"${personality.type}"\n\nGet yours at aiwrapped.com #AIWrapped2025`,
-            files: [file]
-          };
-
-          if (navigator.canShare(shareData)) {
-            updateProgress(100, 'Opening share sheet...');
-            await navigator.share(shareData);
-            showProgress(false);
-            btn.textContent = '✅ Shared!';
-            setTimeout(() => { btn.textContent = '🐦 Tweet'; btn.disabled = false; }, 2000);
-            return;
-          }
-        }
-      }
-
-      // Fallback: Open Twitter intent
-      const text = `My 2025 AI Wrapped is here! 🤖✨
-
-${summary.totalConversations} conversations
-"${personality.type}"
-
-Get yours at aiwrapped.com #AIWrapped2025`;
-
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-      btn.textContent = '✅ Opened!';
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('Twitter share error:', error);
-        btn.textContent = '❌ Error';
-      }
-    }
-
-    showProgress(false);
-    setTimeout(() => { btn.textContent = '🐦 Tweet'; btn.disabled = false; }, 2000);
+// Convert canvas to blob
+function canvasToBlob(canvas, type = 'image/png', quality = 0.92) {
+  return new Promise((resolve) => {
+    canvas.toBlob(resolve, type, quality);
   });
 }
 
-// Instagram instructions modal
-function showInstagramModal(container, imageCount) {
-  const modal = document.createElement('div');
-  modal.className = 'instagram-modal';
-  modal.innerHTML = `
-    <div class="instagram-modal-content">
-      <button class="instagram-modal-close">×</button>
-      <div class="instagram-modal-icon">📸</div>
-      <h3>${imageCount > 1 ? `${imageCount} Images` : 'Image'} Downloaded!</h3>
-      <p>To share on Instagram:</p>
-      <ol style="text-align: left; padding-left: 20px;">
-        <li>Open Instagram on your phone</li>
-        <li>Create a new ${imageCount > 1 ? 'carousel' : 'post'}</li>
-        <li>Select the downloaded ${imageCount > 1 ? 'images' : 'image'}</li>
-        <li>Add: <strong>#AIWrapped2025</strong></li>
-      </ol>
-      <button class="btn btn-primary" id="modal-close-btn">Got it!</button>
-    </div>
-  `;
+// Download image
+async function downloadImage(data, filename = 'ai-wrapped.png') {
+  try {
+    const canvas = await generateShareImage(data, 1080, 1080);
+    const blob = await canvasToBlob(canvas);
+    const url = URL.createObjectURL(blob);
 
-  modal.style.cssText = `
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex;
-    align-items: center; justify-content: center; z-index: 1000;
-  `;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 
-  modal.querySelector('.instagram-modal-content').style.cssText = `
-    background: #1a1a2e; padding: 24px; border-radius: 16px; max-width: 400px;
-    text-align: center; border: 1px solid rgba(255,255,255,0.1);
-  `;
+    return true;
+  } catch (error) {
+    console.error('Download error:', error);
+    return false;
+  }
+}
 
-  container.appendChild(modal);
+// Share using Web Share API (works on mobile)
+async function shareImage(data, platform) {
+  try {
+    const canvas = await generateShareImage(data, 1080, 1080);
+    const blob = await canvasToBlob(canvas);
+    const file = new File([blob], 'ai-wrapped.png', { type: 'image/png' });
 
-  const closeModal = () => modal.remove();
-  modal.querySelector('.instagram-modal-close')?.addEventListener('click', closeModal);
-  modal.querySelector('#modal-close-btn')?.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    const summary = data.summary || {};
+    const personality = data.personality || {};
+
+    const shareText = `My 2025 AI Wrapped is here! 🤖✨
+
+${summary.totalConversations || 847} conversations
+"${personality.type || 'The Explorer'}"
+
+Get yours at aiwrapped.com #AIWrapped2025`;
+
+    // Try native share API
+    if (navigator.share && navigator.canShare) {
+      const shareData = { title: 'My AI Wrapped 2025', text: shareText, files: [file] };
+
+      if (navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        return { success: true, method: 'native' };
+      }
+    }
+
+    // Fallback: Download + open platform
+    await downloadImage(data, `ai-wrapped-${platform}.png`);
+
+    const urls = {
+      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      instagram: null, // Download only
+      linkedin: `https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(shareText)}`
+    };
+
+    if (urls[platform]) {
+      window.open(urls[platform], '_blank');
+    }
+
+    return { success: true, method: 'download' };
+  } catch (error) {
+    console.error('Share error:', error);
+    // Fallback to download
+    await downloadImage(data, `ai-wrapped-${platform}.png`);
+    return { success: true, method: 'download-fallback' };
+  }
+}
+
+function setupShareListeners(container, data) {
+  createConfetti(container, 30);
+
+  // Download button
+  container.querySelector('#download-png')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#download-png');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span>⏳ Generating...</span>';
+    btn.disabled = true;
+
+    const success = await downloadImage(data);
+
+    btn.innerHTML = success ? '<span>✅ Downloaded!</span>' : '<span>❌ Error</span>';
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }, 2000);
+  });
+
+  // Instagram
+  container.querySelector('#share-instagram')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#share-instagram');
+    btn.textContent = '⏳ Generating...';
+    btn.disabled = true;
+
+    const result = await shareImage(data, 'instagram');
+
+    if (result.method === 'download' || result.method === 'download-fallback') {
+      btn.textContent = '✅ Downloaded!';
+      alert('Image downloaded! Open Instagram and upload from your gallery.');
+    } else {
+      btn.textContent = '✅ Shared!';
+    }
+
+    setTimeout(() => {
+      btn.textContent = '📷 Instagram';
+      btn.disabled = false;
+    }, 2000);
+  });
+
+  // Twitter
+  container.querySelector('#share-twitter')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#share-twitter');
+    btn.textContent = '⏳ Generating...';
+    btn.disabled = true;
+
+    await shareImage(data, 'twitter');
+    btn.textContent = '✅ Opened!';
+
+    setTimeout(() => {
+      btn.textContent = '🐦 Twitter/X';
+      btn.disabled = false;
+    }, 2000);
+  });
+
+  // LinkedIn
+  container.querySelector('#share-linkedin')?.addEventListener('click', async () => {
+    const btn = container.querySelector('#share-linkedin');
+    btn.textContent = '⏳ Generating...';
+    btn.disabled = true;
+
+    const result = await shareImage(data, 'linkedin');
+    btn.textContent = result.method === 'native' ? '✅ Shared!' : '✅ Downloaded!';
+
+    if (result.method !== 'native') {
+      alert('Image downloaded! Upload it to the LinkedIn post that opened.');
+    }
+
+    setTimeout(() => {
+      btn.textContent = '💼 LinkedIn';
+      btn.disabled = false;
+    }, 2000);
+  });
 }
 
 export default renderPage8;
