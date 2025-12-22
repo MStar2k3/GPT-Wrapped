@@ -2962,7 +2962,20 @@
     opacity: 0;
 }
 
+/* Caption needs special animation to preserve centering */
+@keyframes slideUpFadeCenter {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
 .slide-caption-pill {
-    animation: slideUpFade 0.4s ease-out 0.5s forwards;
+    animation: slideUpFadeCenter 0.4s ease-out 0.5s forwards;
     opacity: 0;
 }
