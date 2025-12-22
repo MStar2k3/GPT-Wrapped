@@ -1970,3 +1970,103 @@
         width: 100%;
     }
 }
+
+/* === Floating Action Buttons === */
+.floating-actions {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.fab-download {
+    background: linear-gradient(135deg, #00f0ff, #0080ff);
+    color: white;
+}
+
+.fab-share {
+    background: linear-gradient(135deg, #ff00a8, #8b00ff);
+    color: white;
+}
+
+.fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+.fab.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.fab.loading::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 2px solid transparent;
+    border-top-color: white;
+    border-radius: 50%;
+    animation: fab-spin 0.8s linear infinite;
+}
+
+.fab.loading svg {
+    opacity: 0;
+}
+
+.fab.success {
+    background: linear-gradient(135deg, #00ff88, #00cc66) !important;
+}
+
+.fab.success svg {
+    display: none;
+}
+
+.fab.success::before {
+    content: '✓';
+    font-size: 24px;
+}
+
+@keyframes fab-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .floating-actions {
+        bottom: 80px;
+        right: 15px;
+    }
+
+    .fab {
+        width: 48px;
+        height: 48px;
+    }
+
+    .fab svg {
+        width: 18px;
+        height: 18px;
+    }
+}

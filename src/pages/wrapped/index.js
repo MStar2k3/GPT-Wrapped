@@ -7,6 +7,7 @@ import mockUserData from '../../data/mockData.js';
 import { getWrappedData } from '../../utils/chatgptParser.js';
 import { animateCounter, createConfetti, delay } from '../../utils/animations.js';
 import { ShootingStars } from '../../utils/shootingStars.js';
+import { createFloatingButtons } from '../../utils/screenshotCapture.js';
 
 // Page component imports
 import { renderPage1 } from './page1-your-ai-year.js';
@@ -244,6 +245,43 @@ function renderCurrentPage(wrapper) {
     try {
         const pageElement = page.render(userData);
         wrapper.appendChild(pageElement);
+
+        // Map page titles to page types for screenshot capture
+        const pageTypeMap = {
+            'Your AI Year': 'year',
+            'Heat Map': 'stats',
+            'Topics': 'topic',
+            'Personality': 'personality',
+            'Tokens': 'tokens',
+            'Speed': 'speed',
+            'Stats': 'stats',
+            'Share': 'badges'
+        };
+        const pageType = pageTypeMap[page.title] || 'year';
+
+        // Add floating capture/share buttons (except on Share page which has its own)
+        if (page.title !== 'Share') {
+            const pageData = {
+                ...userData.summary,
+                ...userData.personality,
+                ...userData.topTopic,
+                badges: userData.badges,
+                icon: userData.personality?.icon || userData.topTopic?.icon || '✨',
+                type: userData.personality?.type,
+                name: userData.topTopic?.name,
+                percentage: userData.topTopic?.conversations ?
+                    Math.round((userData.topTopic.conversations / userData.summary.totalConversations) * 100) : 0
+            };
+
+            // Use document body for floating buttons
+            setTimeout(() => {
+                createFloatingButtons(document.body, pageData, pageType);
+            }, 200);
+        } else {
+            // Remove floating buttons on share page
+            const existing = document.querySelector('.floating-actions');
+            if (existing) existing.remove();
+        }
 
         // Trigger page-specific animations
         setTimeout(() => {
