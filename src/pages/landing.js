@@ -532,20 +532,37 @@ export function renderLanding() {
 }
 
 function setupEventListeners(container) {
+  // Helper to add both click and touch events for mobile
+  const addMobileClickHandler = (selector, handler) => {
+    const el = container.querySelector(selector);
+    if (!el) return;
+
+    // Click for desktop
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handler();
+    });
+
+    // Touch for mobile
+    el.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handler();
+    }, { passive: false });
+  };
+
   // Sign In button
-  container.querySelector('#sign-in-btn')?.addEventListener('click', () => {
-    showAuthModal('signin');
-  });
+  addMobileClickHandler('#sign-in-btn', () => showAuthModal('signin'));
 
   // Get Started buttons
   ['#get-started-btn', '#hero-cta', '#final-cta'].forEach(id => {
-    container.querySelector(id)?.addEventListener('click', () => {
-      showAuthModal('signup');
-    });
+    addMobileClickHandler(id, () => showAuthModal('signup'));
   });
 
-  // Demo button
-  container.querySelector('#demo-cta')?.addEventListener('click', () => {
+  // Demo button - direct navigation
+  addMobileClickHandler('#demo-cta', () => {
+    console.log('Demo button clicked - navigating to /wrapped');
     router.navigate('/wrapped');
   });
 
