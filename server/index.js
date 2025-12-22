@@ -18,7 +18,7 @@ dotenv.config();
 import authRoutes from './routes/auth.js';
 import generateRoutes from './routes/generate.js';
 import shareRoutes from './routes/share.js';
-import screenshotRoutes from './routes/screenshot.js';
+// Screenshot routes loaded dynamically due to Puppeteer dependency
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -106,7 +106,24 @@ passport.deserializeUser((id, done) => {
 app.use('/auth', authRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/share', shareRoutes);
-app.use('/api/screenshots', screenshotRoutes);
+
+// Screenshot routes - loaded dynamically (Puppeteer may not work in all environments)
+(async () => {
+    try {
+        const { default: screenshotRoutes } = await import('./routes/screenshot.js');
+        app.use('/api/screenshots', screenshotRoutes);
+        console.log('✅ Screenshot routes loaded successfully');
+    } catch (err) {
+        console.log('⚠️ Screenshot routes not available:', err.message);
+        // Provide fallback endpoint
+        app.use('/api/screenshots', (req, res) => {
+            res.status(503).json({
+                error: 'Screenshot service not available',
+                message: 'Puppeteer is not configured in this environment. Use client-side canvas download instead.'
+            });
+        });
+    }
+})();
 
 // Health check
 app.get('/health', (req, res) => {
