@@ -2804,3 +2804,69 @@
         font-size: 9px;
     }
 }
+
+/* ============================================
+   STAGGERED SLIDE-UP-FADE ANIMATIONS
+   ============================================ */
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.topic-row {
+    animation: slideUpFade 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.badge-item {
+    animation: slideUpFade 0.4s ease-out forwards;
+    opacity: 0;
+}
+
+.fact-item {
+    animation: slideUpFade 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+/* Big stat entrance animation */
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.slide-big-stat {
+    animation: popIn 0.4s ease-out forwards;
+}
+
+.slide-emoji {
+    animation: slideUpFade 0.3s ease-out forwards;
+}
+
+.slide-label {
+    animation: slideUpFade 0.35s ease-out 0.1s forwards;
+    opacity: 0;
+}
+
+.slide-subtext {
+    animation: slideUpFade 0.35s ease-out 0.4s forwards;
+    opacity: 0;
+}
+
+.slide-caption-pill {
+    animation: slideUpFade 0.4s ease-out 0.5s forwards;
+    opacity: 0;
+}
