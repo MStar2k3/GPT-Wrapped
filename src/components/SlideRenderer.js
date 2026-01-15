@@ -249,7 +249,7 @@ export function renderSlide(slideConfig, userData) {
     // Logo watermark button (larger on final slide, regular on other slides)
     const isFinalSlide = slideConfig.type === 'final_wrap';
     const logoHTML = `
-        <a href="https://themscconsulting.com" 
+        <a href="https://themscconsultancy.com/" 
            target="_blank" 
            rel="noopener noreferrer" 
            class="logo-watermark ${isFinalSlide ? 'logo-watermark-large' : ''}"
